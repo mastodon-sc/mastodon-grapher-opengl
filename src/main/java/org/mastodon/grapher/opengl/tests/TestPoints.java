@@ -1,4 +1,4 @@
-package org.mastodon.grapher.opengl;
+package org.mastodon.grapher.opengl.tests;
 
 import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
 import static org.lwjgl.glfw.GLFW.GLFW_FALSE;

@@ -31,7 +31,7 @@
  *
  */
 
-package org.mastodon.grapher.opengl;
+package org.mastodon.grapher.opengl.tests;
 
 import java.awt.BorderLayout;
 import java.awt.Frame;

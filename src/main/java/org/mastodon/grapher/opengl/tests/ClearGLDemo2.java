@@ -1,4 +1,4 @@
-package org.mastodon.grapher.opengl;
+package org.mastodon.grapher.opengl.tests;
 
 import java.io.IOException;
 import java.nio.Buffer;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003 Sun Microsystems, Inc. All Rights Reserved.
+ * Copyright (c) 2005 Sun Microsystems, Inc. All Rights Reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -37,25 +37,14 @@
  * and developed by Kenneth Bradley Russell and Christopher John Kline.
  */
 
-package org.mastodon.grapher.opengl;
+package org.mastodon.grapher.opengl.tests;
 
-import com.jogamp.opengl.GLEventListener;
+/** Defines certain events demos can send. Different harnesses
+    may respond differently to these events. */
+public interface DemoListener {
+  /** Indicates that the demo wants to be terminated. */
+  public void shutdownDemo();
 
-public abstract class Demo implements GLEventListener {
-  protected DemoListener demoListener;
-  private boolean doShutdown = true;
-
-  public void setDemoListener(final DemoListener listener) {
-    this.demoListener = listener;
-  }
-
-  // Override this with any other cleanup actions
-  public void shutdownDemo() {
-    // Execute only once
-    final boolean shouldDoShutdown = doShutdown;
-    doShutdown = false;
-    if (shouldDoShutdown) {
-      demoListener.shutdownDemo();
-    }
-  }
+  /** Indicates that a repaint should be scheduled later. */
+  public void repaint();
 }
