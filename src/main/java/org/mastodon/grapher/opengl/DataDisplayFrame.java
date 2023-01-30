@@ -29,60 +29,32 @@
 package org.mastodon.grapher.opengl;
 
 import java.awt.BorderLayout;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 
-import javax.swing.Box;
-import javax.swing.JComponent;
+import javax.swing.JFrame;
 import javax.swing.JSplitPane;
-import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 
-import org.mastodon.app.ui.GroupLocksPanel;
-import org.mastodon.app.ui.ViewFrame;
 import org.mastodon.feature.FeatureModel;
 import org.mastodon.feature.FeatureModel.FeatureModelListener;
-import org.mastodon.graph.Edge;
-import org.mastodon.graph.Vertex;
-import org.mastodon.grouping.GroupHandle;
-import org.mastodon.model.FocusModel;
-import org.mastodon.model.HasLabel;
-import org.mastodon.model.HighlightModel;
-import org.mastodon.model.NavigationHandler;
+import org.mastodon.mamut.feature.SpotPositionFeature;
+import org.mastodon.mamut.model.Link;
+import org.mastodon.mamut.model.ModelGraph;
+import org.mastodon.mamut.model.Spot;
 import org.mastodon.model.SelectionModel;
-import org.mastodon.spatial.HasTimepoint;
-import org.mastodon.undo.UndoPointMarker;
 import org.mastodon.util.FeatureUtils;
 import org.mastodon.views.context.ContextChooser;
-import org.mastodon.views.grapher.datagraph.DataEdge;
-import org.mastodon.views.grapher.datagraph.DataGraph;
-import org.mastodon.views.grapher.datagraph.DataGraphLayout;
-import org.mastodon.views.grapher.datagraph.DataVertex;
-import org.mastodon.views.grapher.display.DataDisplayOptions;
+import org.mastodon.views.grapher.display.FeatureGraphConfig;
+import org.mastodon.views.grapher.display.FeatureGraphConfig.GraphDataItemsSource;
+import org.mastodon.views.grapher.display.FeatureSpecPair;
 import org.mastodon.views.grapher.display.GrapherSidePanel;
-import org.scijava.ui.behaviour.MouseAndKeyHandler;
 
-public class DataDisplayFrame< V extends Vertex< E > & HasTimepoint & HasLabel, E extends Edge< V > > extends ViewFrame
+public class DataDisplayFrame extends JFrame
 {
 	private static final long serialVersionUID = 1L;
 
-	private final DataDisplayPanel< V, E > dataDisplayPanel;
-
 	private final GrapherSidePanel sidePanel;
 
-	public DataDisplayFrame(
-			final DataGraph< V, E > graph,
-			final FeatureModel featureModel,
-			final int nSources,
-			final DataGraphLayout< V, E > layout,
-			final HighlightModel< DataVertex, DataEdge > highlight,
-			final FocusModel< DataVertex, DataEdge > focus,
-			final SelectionModel< DataVertex, DataEdge > selection,
-			final NavigationHandler< DataVertex, DataEdge > navigation,
-			final UndoPointMarker undoPointMarker,
-			final GroupHandle groupHandle,
-			final ContextChooser< V > contextChooser,
-			final DataDisplayOptions optional )
+	public DataDisplayFrame( final int nSources, final ModelGraph graph, final SelectionModel< Spot, Link > selection, final FeatureModel featureModel )
 	{
 		super( "Grapher" );
 
@@ -90,35 +62,31 @@ public class DataDisplayFrame< V extends Vertex< E > & HasTimepoint & HasLabel, 
 		 * Plot panel.
 		 */
 
-		dataDisplayPanel = new DataDisplayPanel<>(
-				graph,
-				layout,
-				highlight,
-				focus,
-				selection,
-				navigation,
-				optional );
-
-		/*
-		 * Get the classes of the model vertices and edges. We need them to
-		 * query the feature model.
-		 */
-
-		final Class< V > vertexClass = graph.getGraphIdBimap().vertexIdBimap().getRefClass();
-		final Class< E > edgeClass = graph.getGraphIdBimap().edgeIdBimap().getRefClass();
+		final DataLayout layout = new DataLayout();
+		final DataDisplayPanel dataDisplayPanel = new DataDisplayPanel( layout, featureModel, graph, selection );
 
 		/*
 		 * Side panel.
 		 */
 
+		final ContextChooser< Spot > contextChooser = new ContextChooser<>( dataDisplayPanel );
 		sidePanel = new GrapherSidePanel( nSources, contextChooser );
-		sidePanel.btnPlot.addActionListener( e -> dataDisplayPanel.plot( sidePanel.getGraphConfig(), featureModel ) );
+		sidePanel.btnPlot.addActionListener( e -> dataDisplayPanel.plot( sidePanel.getGraphConfig() ) );
 
 		final FeatureModelListener featureModelListener = () -> sidePanel.setFeatures(
-				FeatureUtils.collectFeatureMap( featureModel, vertexClass ),
-				FeatureUtils.collectFeatureMap( featureModel, edgeClass ) );
+				FeatureUtils.collectFeatureMap( featureModel, Spot.class ),
+				FeatureUtils.collectFeatureMap( featureModel, Link.class ) );
 		featureModel.listeners().add( featureModelListener );
 		featureModelListener.featureModelChanged();
+
+		final FeatureSpecPair spvx = new FeatureSpecPair( SpotPositionFeature.SPEC,
+				SpotPositionFeature.PROJECTION_SPECS.get( 0 ), 0, false, false );
+		final FeatureSpecPair spvy = new FeatureSpecPair( SpotPositionFeature.SPEC,
+				SpotPositionFeature.PROJECTION_SPECS.get( 1 ), 0, false, false );
+		final FeatureGraphConfig fgc = new FeatureGraphConfig( spvx, spvy, GraphDataItemsSource.CONTEXT, false );
+		sidePanel.setGraphConfig( fgc );
+
+//		dataDisplayPanel.plot( fgc, featureModel );
 
 		/*
 		 * Main panel is a split pane.
@@ -129,49 +97,10 @@ public class DataDisplayFrame< V extends Vertex< E > & HasTimepoint & HasLabel, 
 		mainPanel.setOneTouchExpandable( true );
 		mainPanel.setBorder( null );
 		mainPanel.setDividerLocation( 250 );
-
 		add( mainPanel, BorderLayout.CENTER );
-
-		/*
-		 * Top settings bar.
-		 */
-
-		final GroupLocksPanel navigationLocksPanel = new GroupLocksPanel( groupHandle );
-		settingsPanel.add( navigationLocksPanel );
-		settingsPanel.add( Box.createHorizontalGlue() );
-
-//		final ContextChooserPanel< ? > contextChooserPanel = new ContextChooserPanel<>( contextChooser );
-//		settingsPanel.add( contextChooserPanel );
 
 		pack();
 		setDefaultCloseOperation( WindowConstants.DISPOSE_ON_CLOSE );
-		addWindowListener( new WindowAdapter()
-		{
-			@Override
-			public void windowClosing( final WindowEvent e )
-			{
-				dataDisplayPanel.stop();
-			}
-		} );
-
-		SwingUtilities.replaceUIActionMap( dataDisplayPanel, keybindings.getConcatenatedActionMap() );
-		SwingUtilities.replaceUIInputMap( dataDisplayPanel, JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT, keybindings.getConcatenatedInputMap() );
-
-		final MouseAndKeyHandler mouseAndKeyHandler = new MouseAndKeyHandler();
-		mouseAndKeyHandler.setInputMap( triggerbindings.getConcatenatedInputTriggerMap() );
-		mouseAndKeyHandler.setBehaviourMap( triggerbindings.getConcatenatedBehaviourMap() );
-		mouseAndKeyHandler.setKeypressManager( optional.values.getKeyPressedManager(), dataDisplayPanel.getDisplay() );
-		dataDisplayPanel.getDisplay().addHandler( mouseAndKeyHandler );
-		setLocation( optional.values.getX(), optional.values.getY() );
-	}
-
-	public DataDisplayPanel< V, E > getDataDisplayPanel()
-	{
-		return dataDisplayPanel;
-	}
-
-	public GrapherSidePanel getVertexSidePanel()
-	{
-		return sidePanel;
+		setVisible( true );
 	}
 }
