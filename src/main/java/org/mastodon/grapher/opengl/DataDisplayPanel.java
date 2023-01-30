@@ -1,7 +1,5 @@
 package org.mastodon.grapher.opengl;
 
-import static org.lwjgl.opengl.GL11C.GL_FLOAT;
-
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -27,24 +25,14 @@ import org.mastodon.mamut.model.Link;
 import org.mastodon.mamut.model.ModelGraph;
 import org.mastodon.mamut.model.Spot;
 import org.mastodon.model.SelectionModel;
-import org.mastodon.ui.coloring.ColorMap;
 import org.mastodon.views.context.Context;
 import org.mastodon.views.context.ContextListener;
 import org.mastodon.views.grapher.display.FeatureGraphConfig;
 import org.mastodon.views.grapher.display.FeatureSpecPair;
 
-import com.jogamp.common.nio.Buffers;
-import com.jogamp.opengl.GL;
-import com.jogamp.opengl.GL2;
-import com.jogamp.opengl.GLAutoDrawable;
-import com.jogamp.opengl.GLCapabilities;
-import com.jogamp.opengl.GLEventListener;
-import com.jogamp.opengl.GLProfile;
-import com.jogamp.opengl.awt.GLCanvas;
-
 import bdv.viewer.render.PainterThread;
 
-public class DataDisplayPanel extends JPanel implements GLEventListener, MouseListener, MouseWheelListener, MouseMotionListener, ContextListener< Spot >
+public class DataDisplayPanel extends JPanel implements MouseListener, MouseWheelListener, MouseMotionListener, ContextListener< Spot >
 {
 
 	private static final long serialVersionUID = 1L;
@@ -64,8 +52,6 @@ public class DataDisplayPanel extends JPanel implements GLEventListener, MouseLi
 	private double zoom = 1;
 
 	private FloatBuffer vertexData;
-
-	private final GLCanvas canvas;
 
 	private final DataLayout layout;
 
@@ -87,6 +73,8 @@ public class DataDisplayPanel extends JPanel implements GLEventListener, MouseLi
 
 	private final PainterThread painterThread;
 
+	private final PointCloudCanvas canvas;
+
 	public DataDisplayPanel(
 			final DataLayout layout,
 			final FeatureModel featureModel,
@@ -97,20 +85,17 @@ public class DataDisplayPanel extends JPanel implements GLEventListener, MouseLi
 		this.featureModel = featureModel;
 		this.graph = graph;
 		this.selection = selection;
-		final GLProfile profile = GLProfile.getDefault();
-		final GLCapabilities capabilities = new GLCapabilities( profile );
-		canvas = new GLCanvas( capabilities );
+		canvas = new PointCloudCanvas();
 
 		canvas.addMouseListener( this );
 		canvas.addMouseMotionListener( this );
 		canvas.addMouseWheelListener( this );
-		canvas.addGLEventListener( this );
 
 		setPreferredSize( new Dimension( 400, 400 ) );
 		setLayout( new BorderLayout() );
 		add( canvas, BorderLayout.CENTER );
 
-		painterThread = new PainterThread( () -> canvas.display() );
+		painterThread = new PainterThread( () -> canvas.paintGL() );
 		painterThread.start();
 	}
 
@@ -118,145 +103,6 @@ public class DataDisplayPanel extends JPanel implements GLEventListener, MouseLi
 	protected void paintComponent( final Graphics g )
 	{
 		painterThread.requestRepaint();
-	}
-
-	@Override
-	public void init( final GLAutoDrawable drawable )
-	{
-
-		// GL class.
-		final GL2 gl = drawable.getGL().getGL2();
-
-		if ( vertexVBO != null )
-		{
-			gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vertexVBO[ 0 ] );
-			gl.glDeleteBuffers( 1, vertexVBO, 0 );
-		}
-		if ( colorVBO != null )
-		{
-			gl.glBindBuffer( GL.GL_ARRAY_BUFFER, colorVBO[ 0 ] );
-			gl.glDeleteBuffers( 1, colorVBO, 0 );
-		}
-
-		if ( vertices.isEmpty() )
-		{
-			// Generate random vertex data
-			final int nPoints = 100;
-			vertexData = Buffers.newDirectFloatBuffer( 2 * nPoints );
-			colorData = FloatBuffer.allocate( 3 * nPoints );
-
-			final ColorMap cm = ColorMap.getColorMap( ColorMap.JET.getName() );
-			for ( int i = 0; i < nPoints; i++ )
-			{
-//			final double x = ran.nextDouble() * 1.8 - 0.9;
-//			final double y = ran.nextDouble() * 1.8 - 0.9;
-				final float x = ( float ) i / nPoints * 2 - 1;
-				final float y = ( float ) Math.cos( 2. * x * Math.PI );
-				vertexData.put( x );
-				vertexData.put( y );
-				final int c = cm.get( ( float ) i / nPoints );
-//			final int a = ( c >> 24 ) & 0xFF;
-				final int r = ( c >> 16 ) & 0xFF;
-				final int g = ( c >> 8 ) & 0xFF;
-				final int b = c & 255;
-				colorData.put( r / 255f );
-				colorData.put( g / 255f );
-				colorData.put( b / 255f );
-			}
-			vertexData.flip();
-			colorData.flip();
-		}
-		else
-		{
-			final int nPoints = vertices.size();
-			System.out.println( "Recreating buffers for " + nPoints + " points." ); // DEBUG
-			vertexData = layout.layout( vertices );
-
-			colorData = FloatBuffer.allocate( 3 * nPoints );
-			final ColorMap cm = ColorMap.getColorMap( ColorMap.JET.getName() );
-			for ( int i = 0; i < nPoints; i++ )
-			{
-				final int c = cm.get( ( float ) i / nPoints );
-//			final int a = ( c >> 24 ) & 0xFF;
-				final int r = ( c >> 16 ) & 0xFF;
-				final int g = ( c >> 8 ) & 0xFF;
-				final int b = c & 255;
-				colorData.put( r / 255f );
-				colorData.put( g / 255f );
-				colorData.put( b / 255f );
-			}
-			colorData.flip();
-		}
-
-		// Reset view.
-		float minX = Float.MAX_VALUE;
-		float maxX = -Float.MAX_VALUE;
-		float minY = Float.MAX_VALUE;
-		float maxY = -Float.MAX_VALUE;
-		for ( int i = 0; i < vertexData.limit(); i++ )
-		{
-			final float x = vertexData.get( i );
-			minX = Math.min( minX, x );
-			maxX = Math.max( maxX, x );
-			i++;
-			final float y = vertexData.get( i );
-			minY = Math.min( minY, y );
-			maxY = Math.max( maxY, y );
-		}
-
-		System.out.println( "minX = " + minX + "  maxX = " + maxX + "  minY = " + minY + "  maxY = " + maxY ); // DEBUG
-
-		gl.glMatrixMode( GL2.GL_PROJECTION );
-		gl.glLoadIdentity();
-		gl.glOrtho( minX, maxX, minY, maxY, -1, 1 );
-		gl.glMatrixMode( GL2.GL_MODELVIEW );
-		gl.glLoadIdentity();
-
-		// Vertex buffer -> 2D double.
-		vertexVBO = new int[ 1 ];
-		gl.glGenBuffers( 1, vertexVBO, 0 );
-		gl.glBindBuffer( GL2.GL_ARRAY_BUFFER, vertexVBO[ 0 ] );
-		gl.glEnableClientState( GL2.GL_VERTEX_ARRAY );
-		gl.glVertexPointer( 2, GL2.GL_FLOAT, 0, 0 );
-		gl.glBufferData( GL2.GL_ARRAY_BUFFER, vertexData.capacity() * Float.BYTES,
-				vertexData, GL2.GL_STATIC_DRAW );
-
-		// Color buffer -> 3D float.
-		colorVBO = new int[ 1 ];
-		gl.glGenBuffers( 1, colorVBO, 0 );
-		gl.glBindBuffer( GL.GL_ARRAY_BUFFER, colorVBO[ 0 ] );
-		gl.glEnableClientState( GL2.GL_COLOR_ARRAY );
-		gl.glColorPointer( 3, GL_FLOAT, 0, 0l );
-		gl.glBufferData( GL.GL_ARRAY_BUFFER, colorData.capacity() * Float.BYTES,
-				colorData, GL.GL_STATIC_DRAW );
-	}
-
-	@Override
-	public void display( final GLAutoDrawable drawable )
-	{
-		final GL2 gl = drawable.getGL().getGL2();
-		gl.glClear( GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT );
-
-//		gl.glClearColor( 0.0f, 0.0f, 0.0f, 1.0f );
-		gl.glPointSize( 5f );
-
-		if ( shouldRegenBuffer )
-		{
-			init( drawable );
-			shouldRegenBuffer = false;
-		}
-
-
-		gl.glBindBuffer( GL2.GL_ARRAY_BUFFER, vertexVBO[ 0 ] );
-
-		final int nPoints = vertexData.capacity() / 2;
-
-		// Handle panning.
-//		gl.glMatrixMode( GL2.GL_MODELVIEW );
-//		gl.glLoadIdentity();
-//		gl.glTranslated( panX, panY, 0 );
-//		gl.glScaled( zoom, zoom, 1 );
-		gl.glDrawArrays( GL2.GL_POINTS, 0, nPoints );
 	}
 
 	public void plot( final FeatureGraphConfig gc )
@@ -322,24 +168,6 @@ public class DataDisplayPanel extends JPanel implements GLEventListener, MouseLi
 
 		shouldRegenBuffer = true;
 		painterThread.requestRepaint();
-	}
-
-	@Override
-	public void reshape( final GLAutoDrawable drawable, final int x, final int y, final int width, final int height )
-	{
-		this.width = width;
-		this.height = height;
-		final GL2 gl = drawable.getGL().getGL2();
-		gl.glViewport( 0, 0, width, height );
-	}
-
-	@Override
-	public void dispose( final GLAutoDrawable drawable )
-	{
-		painterThread.interrupt();
-		final GL2 gl = drawable.getGL().getGL2();
-		gl.glDeleteBuffers( 1, vertexVBO, 0 );
-		gl.glDeleteBuffers( 1, colorVBO, 0 );
 	}
 
 	@Override

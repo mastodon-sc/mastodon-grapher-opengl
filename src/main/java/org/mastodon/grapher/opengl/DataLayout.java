@@ -31,12 +31,11 @@ package org.mastodon.grapher.opengl;
 import java.nio.FloatBuffer;
 import java.util.Collection;
 
+import org.lwjgl.BufferUtils;
 import org.mastodon.feature.FeatureProjection;
 import org.mastodon.graph.Edges;
 import org.mastodon.mamut.model.Link;
 import org.mastodon.mamut.model.Spot;
-
-import com.jogamp.common.nio.Buffers;
 
 public class DataLayout
 {
@@ -100,11 +99,11 @@ public class DataLayout
 	{
 		if ( vertices.isEmpty() )
 		{
-			return Buffers.newDirectFloatBuffer( 0 );
+			return BufferUtils.createFloatBuffer( 0 );
 		}
 
 		final int nPoints = vertices.size();
-		final FloatBuffer vertexData = Buffers.newDirectFloatBuffer( 2 * nPoints );
+		final FloatBuffer vertexData = BufferUtils.createFloatBuffer( 2 * nPoints );
 		if ( ( xpVertex != null || xpEdge != null ) && ( ypVertex != null || ypEdge != null ) )
 		{
 			for ( final Spot v : vertices )
