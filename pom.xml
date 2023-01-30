@@ -28,7 +28,6 @@
 		</license>
 	</licenses>
 
-
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
@@ -43,52 +42,16 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>com.github.hageldave.jplotter</groupId>
-			<artifactId>jplotter</artifactId>
-			<version>0.6.1</version>
-		</dependency>
-		<dependency>
-			<groupId>org.lwjgl</groupId>
-			<artifactId>lwjgl</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.lwjgl</groupId>
-			<artifactId>lwjgl-assimp</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.lwjgl</groupId>
-			<artifactId>lwjgl-glfw</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.lwjgl</groupId>
-			<artifactId>lwjgl-openal</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>org.lwjgl</groupId>
 			<artifactId>lwjgl-opengl</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.lwjgl</groupId>
-			<artifactId>lwjgl-stb</artifactId>
-		</dependency>
+			<artifactId>lwjgl-glfw</artifactId>
+		</dependency>		
 		<dependency>
 			<groupId>org.lwjgl</groupId>
 			<artifactId>lwjgl</artifactId>
-			<classifier>${lwjgl.natives}</classifier>
-		</dependency>
-		<dependency>
-			<groupId>org.lwjgl</groupId>
-			<artifactId>lwjgl-assimp</artifactId>
-			<classifier>${lwjgl.natives}</classifier>
-		</dependency>
-		<dependency>
-			<groupId>org.lwjgl</groupId>
-			<artifactId>lwjgl-glfw</artifactId>
-			<classifier>${lwjgl.natives}</classifier>
-		</dependency>
-		<dependency>
-			<groupId>org.lwjgl</groupId>
-			<artifactId>lwjgl-openal</artifactId>
 			<classifier>${lwjgl.natives}</classifier>
 		</dependency>
 		<dependency>
@@ -98,31 +61,18 @@
 		</dependency>
 		<dependency>
 			<groupId>org.lwjgl</groupId>
-			<artifactId>lwjgl-stb</artifactId>
+			<artifactId>lwjgl-glfw</artifactId>
 			<classifier>${lwjgl.natives}</classifier>
+		</dependency>
+		<dependency>
+			<groupId>com.github.lwjglx</groupId>
+			<artifactId>lwjgl3-awt</artifactId>
+			<version>392367cd68542186e39d834a57b0f4895185a306</version>
 		</dependency>
 		<dependency>
 			<groupId>org.mastodon</groupId>
 			<artifactId>mastodon</artifactId>
 			<version>1.0.0-beta-27-SNAPSHOT</version>
-		</dependency>
-		<dependency>
-			<groupId>net.clearvolume</groupId>
-			<artifactId>cleargl</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>org.jogamp.gluegen</groupId>
-			<artifactId>gluegen-rt</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.jogamp.jogl</groupId>
-			<artifactId>jogl-all</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.github.lwjglx</groupId>
-			<artifactId>lwjgl3-awt</artifactId>
-			<version>45a85af</version>
 		</dependency>
 	</dependencies>
 
@@ -135,7 +85,10 @@
 		<license.copyrightOwners>Tobias Pietzsch, Jean-Yves Tinevez</license.copyrightOwners>
 
 		<lwjgl.version>3.3.1</lwjgl.version>
+		<!-- 
 		<lwjgl.natives>natives-macos</lwjgl.natives>
+-->
+		<lwjgl.natives>natives-windows</lwjgl.natives>
 	</properties>
 
 	<developers>
@@ -186,10 +139,10 @@
 			<id>scijava.public</id>
 			<url>https://maven.scijava.org/content/groups/public</url>
 		</repository>
-        <repository>
-            <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
-        </repository>		
+		<repository>
+			<id>jitpack.io</id>
+			<url>https://jitpack.io</url>
+		</repository>
 	</repositories>
 
 
