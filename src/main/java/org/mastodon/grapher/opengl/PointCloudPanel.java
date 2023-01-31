@@ -4,6 +4,7 @@ import static org.mastodon.grapher.opengl.PointCloudCanvas.COLOR_SIZE;
 import static org.mastodon.grapher.opengl.PointCloudCanvas.VERTEX_SIZE;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 
 import javax.swing.JPanel;
@@ -36,6 +37,8 @@ public class PointCloudPanel extends JPanel implements Paintable, ContextListene
 	public PointCloudPanel()
 	{
 		super( new BorderLayout(), false );
+
+		setBackground( Color.BLACK );
 
 		final int w = 400;
 		final int h = 400;
