@@ -28,7 +28,7 @@ public class TestGrapher
 
 		final MamutAppModel appModel = wm.getAppModel();
 
-		final MamutViewGrapherOpenGL grapher = new MamutViewGrapherOpenGL( appModel );
+		final MamutViewOpenGL grapher = new MamutViewOpenGL( appModel );
 		grapher.getFrame().setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
 	}
 
