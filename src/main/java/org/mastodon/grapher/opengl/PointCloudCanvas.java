@@ -232,6 +232,9 @@ public class PointCloudCanvas extends AWTGLCanvas
 	public void initGL()
 	{
 		createCapabilities();
+		
+		GL11.glDisable( GL11.GL_DEPTH_TEST );
+		GL11.glDisable( GL11.GL_CULL_FACE );
 
 		// Make new buffers.
 		this.vertexBuffer = BufferUtils.createFloatBuffer( INIT_BUFFER_SIZE * VERTEX_SIZE );
@@ -280,15 +283,14 @@ public class PointCloudCanvas extends AWTGLCanvas
 
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 		glPointSize( pointSize );
-//
+
 		glBindBuffer( GL15.GL_ARRAY_BUFFER, vboVertexHandle );
 		GL15.glBufferSubData( GL15.GL_ARRAY_BUFFER, 0, vertexBuffer );
 		GL11.glVertexPointer( VERTEX_SIZE, GL11.GL_FLOAT, 0, 0 );
-//
+
 		glBindBuffer( GL_ARRAY_BUFFER, vboColorHandle );
 		GL15.glBufferSubData( GL15.GL_ARRAY_BUFFER, 0, colorBuffer );
 		GL15.glColorPointer( COLOR_SIZE, GL11.GL_FLOAT, 0, 0 );
-
 
 		glDrawArrays( GL11.GL_POINTS, 0, nPoints );
 		glBindBuffer( GL15.GL_ARRAY_BUFFER, 0 );
