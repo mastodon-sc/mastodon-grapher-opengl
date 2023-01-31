@@ -27,6 +27,19 @@
 			<distribution>repo</distribution>
 		</license>
 	</licenses>
+	
+	<properties>
+		<package-name>org.mastodon</package-name>
+
+		<license.licenseName>bsd_2</license.licenseName>
+		<license.projectName>Mastodon</license.projectName>
+		<license.organizationName>Mastodon authors</license.organizationName>
+		<license.copyrightOwners>Tobias Pietzsch, Jean-Yves Tinevez</license.copyrightOwners>
+
+		<lwjgl.version>3.3.1</lwjgl.version>
+		<lwjgl3-awt.version>0.1.8</lwjgl3-awt.version>
+		<lwjgl.natives>natives-macos</lwjgl.natives>
+	</properties>
 
 	<dependencyManagement>
 		<dependencies>
@@ -43,12 +56,16 @@
 	<dependencies>
 		<dependency>
 			<groupId>org.lwjgl</groupId>
-			<artifactId>lwjgl-opengl</artifactId>
+			<artifactId>lwjgl</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.lwjgl</groupId>
 			<artifactId>lwjgl-glfw</artifactId>
-		</dependency>		
+		</dependency>
+		<dependency>
+			<groupId>org.lwjgl</groupId>
+			<artifactId>lwjgl-opengl</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>org.lwjgl</groupId>
 			<artifactId>lwjgl</artifactId>
@@ -56,18 +73,18 @@
 		</dependency>
 		<dependency>
 			<groupId>org.lwjgl</groupId>
-			<artifactId>lwjgl-opengl</artifactId>
-			<classifier>${lwjgl.natives}</classifier>
-		</dependency>
-		<dependency>
-			<groupId>org.lwjgl</groupId>
 			<artifactId>lwjgl-glfw</artifactId>
 			<classifier>${lwjgl.natives}</classifier>
 		</dependency>
 		<dependency>
-			<groupId>com.github.lwjglx</groupId>
+			<groupId>org.lwjgl</groupId>
+			<artifactId>lwjgl-opengl</artifactId>
+			<classifier>${lwjgl.natives}</classifier>
+		</dependency>
+		<dependency>
+			<groupId>org.lwjglx</groupId>
 			<artifactId>lwjgl3-awt</artifactId>
-			<version>392367cd68542186e39d834a57b0f4895185a306</version>
+			<version>${lwjgl3-awt.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.mastodon</groupId>
@@ -75,21 +92,6 @@
 			<version>1.0.0-beta-27-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
-
-	<properties>
-		<package-name>org.mastodon</package-name>
-
-		<license.licenseName>bsd_2</license.licenseName>
-		<license.projectName>Mastodon</license.projectName>
-		<license.organizationName>Mastodon authors</license.organizationName>
-		<license.copyrightOwners>Tobias Pietzsch, Jean-Yves Tinevez</license.copyrightOwners>
-
-		<lwjgl.version>3.3.1</lwjgl.version>
-		<!-- 
-		<lwjgl.natives>natives-macos</lwjgl.natives>
--->
-		<lwjgl.natives>natives-windows</lwjgl.natives>
-	</properties>
 
 	<developers>
 		<developer>
