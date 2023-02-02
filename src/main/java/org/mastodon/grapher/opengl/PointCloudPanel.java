@@ -12,17 +12,19 @@ import javax.swing.JScrollBar;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
+import org.mastodon.grapher.opengl.overlays.DataPointsOverlay;
 import org.mastodon.mamut.model.Spot;
 import org.mastodon.views.context.Context;
 import org.mastodon.views.context.ContextListener;
 import org.mastodon.views.grapher.datagraph.ScreenTransform;
+import org.mastodon.views.grapher.display.FeatureGraphConfig;
 import org.mastodon.views.grapher.display.ScreenTransformState;
 
 import bdv.viewer.TransformListener;
 import bdv.viewer.render.PainterThread;
 import bdv.viewer.render.PainterThread.Paintable;
 
-public class PointCloudPanel extends JPanel implements Paintable, ContextListener< Spot >, TransformListener< ScreenTransform >
+public class PointCloudPanel extends JPanel implements Paintable, ContextListener< Spot >, TransformListener< ScreenTransform >, LayoutChangeListener
 {
 
 	private static final long serialVersionUID = 1L;
@@ -56,26 +58,43 @@ public class PointCloudPanel extends JPanel implements Paintable, ContextListene
 
 	private ScreenTransformState screenTransform;
 
-	public PointCloudPanel()
+	private final DataPointsOverlay dataPointsOverlay;
+
+	private float layoutMinX;
+
+	private float layoutMaxX;
+
+	private float layoutMinY;
+
+	private float layoutMaxY;
+
+	public PointCloudPanel( final DataLayout layout )
 	{
 		super( new BorderLayout(), false );
-
 		setBackground( Color.BLACK );
-
 		final int w = 400;
 		final int h = 400;
 		setPreferredSize( new Dimension( w, h ) );
 
+		// Core canvas and painter thread.
 		this.canvas = new PointCloudCanvas();
 		this.painterThread = new PainterThread( this );
 
+		// Screen transform.
 		this.screenTransform = new ScreenTransformState( new ScreenTransform( -1, 1, -1, 1, w, h ) );
 		this.transformHandler = new InertialScreenTransformEventHandler( screenTransform );
 		canvas.setTransformEventHandler( transformHandler );
 		screenTransform.listeners().add( this );
 
+		// Overlays for the canvas.
+		this.dataPointsOverlay = new DataPointsOverlay( layout, transformHandler );
+		dataPointsOverlay.getLayoutChangeListeners().add( this );
+		canvas.overlays().add( dataPointsOverlay );
+
+		// Add main canvas.
 		add( canvas, BorderLayout.CENTER );
 
+		// Add scroll bars.
 		xScrollBar = new JScrollBar( JScrollBar.HORIZONTAL );
 		yScrollBar = new JScrollBar( JScrollBar.VERTICAL );
 		xScrollBar.addAdjustmentListener( new AdjustmentListener()
@@ -102,7 +121,7 @@ public class PointCloudPanel extends JPanel implements Paintable, ContextListene
 					return;
 
 				final ScreenTransform t = screenTransform.get();
-				final double s = canvas.layoutMaxY + canvas.layoutMinY - yScrollBar.getValue() / yScrollScale;
+				final double s = layoutMaxY + layoutMinY - yScrollBar.getValue() / yScrollScale;
 				t.shiftLayoutY( ( s - t.getMaxY() ) );
 				screenTransform.set( t );
 				painterThread.requestRepaint();
@@ -125,16 +144,16 @@ public class PointCloudPanel extends JPanel implements Paintable, ContextListene
 		SwingUtilities.invokeLater( canvas::render );
 
 		// adjust scrollbars sizes
-		xScrollScale = 10000.0 / ( canvas.layoutMaxX - canvas.layoutMinX + 2 );
+		xScrollScale = 10000.0 / ( layoutMaxX - layoutMinX + 2 );
 		final int xval = ( int ) ( xScrollScale * canvas.t.getMinX() );
 		final int xext = ( int ) ( xScrollScale * ( canvas.t.getMaxX() - canvas.t.getMinX() ) );
-		final int xmin = ( int ) ( xScrollScale * canvas.layoutMinX );
-		final int xmax = ( int ) ( xScrollScale * canvas.layoutMaxX );
-		yScrollScale = 10000.0 / ( canvas.layoutMaxY - canvas.layoutMinY + 2 );
+		final int xmin = ( int ) ( xScrollScale * layoutMinX );
+		final int xmax = ( int ) ( xScrollScale * layoutMaxX );
+		yScrollScale = 10000.0 / ( layoutMaxY - layoutMinY + 2 );
 		final int yext = ( int ) ( yScrollScale * ( canvas.t.getMaxY() - canvas.t.getMinY() ) );
-		final int ymin = ( int ) ( yScrollScale * canvas.layoutMinY );
-		final int ymax = ( int ) ( yScrollScale * canvas.layoutMaxY );
-		final int yval = ( int ) ( yScrollScale * ( canvas.layoutMinY + canvas.layoutMaxY - canvas.t.getMaxY() ) );
+		final int ymin = ( int ) ( yScrollScale * layoutMinY );
+		final int ymax = ( int ) ( yScrollScale * layoutMaxY );
+		final int yval = ( int ) ( yScrollScale * ( layoutMinY + layoutMaxY - canvas.t.getMaxY() ) );
 
 		ignoreScrollBarChanges = true;
 		xScrollBar.setValues( xval, xext, xmin, xmax );
@@ -169,5 +188,20 @@ public class PointCloudPanel extends JPanel implements Paintable, ContextListene
 	{
 		System.out.println( "Window closing." ); // DEBUG
 		painterThread.interrupt();
+	}
+
+	public void plot( final FeatureGraphConfig graphConfig )
+	{
+		dataPointsOverlay.plot( graphConfig );
+	}
+
+	@Override
+	public void layoutChanged( final float layoutMinX, final float layoutMaxX, final float layoutMinY, final float layoutMaxY )
+	{
+		this.layoutMinX = layoutMinX;
+		this.layoutMaxX = layoutMaxX;
+		this.layoutMinY = layoutMinY;
+		this.layoutMaxY = layoutMaxY;
+		
 	}
 }

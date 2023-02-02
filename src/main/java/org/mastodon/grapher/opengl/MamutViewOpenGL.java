@@ -70,7 +70,7 @@ public class MamutViewOpenGL extends MamutView< ViewGraph< Spot, Link, Spot, Lin
 
 //		contextListener.setContextListener( dataDisplayPanel );
 
-		frame.plot( gcv );
+		dataDisplayPanel.plot( gcv );
 		dataDisplayPanel.getTransformEventHandler().zoomTo( -10000, 10000, -10000, 10000 );
 		dataDisplayPanel.getTransformEventHandler().install( viewBehaviours );
 
