@@ -73,7 +73,7 @@ public class PointCloudCanvas extends AWTGLCanvas
 			framebufferWidth = ( int ) ( getWidth() * sx );
 			framebufferHeight = ( int ) ( getHeight() * sy );
 			if ( handler != null )
-				handler.setCanvasSize( getWidth(), getHeight(), true );
+				handler.setCanvasSize( framebufferWidth, framebufferHeight, true );
 		}
 	};
 
@@ -100,11 +100,25 @@ public class PointCloudCanvas extends AWTGLCanvas
 	/**
 	 * Used to read from the screen transform state.
 	 */
-	private final ScreenTransform t = new ScreenTransform( -1, 1, -1, 1, 400, 400 );
+	final ScreenTransform t;
+
+	float layoutMinX;
+
+	float layoutMinY;
+
+	float layoutMaxX;
+
+	float layoutMaxY;
 
 	public PointCloudCanvas()
 	{
 		super();
+		this.t = new ScreenTransform( -1, 1, -1, 1, 400, 400 );
+		this.layoutMinX = ( float ) t.getMinX();
+		this.layoutMinY = ( float ) t.getMinY();
+		this.layoutMaxX = ( float ) t.getMaxX();
+		this.layoutMaxY = ( float ) t.getMaxY();
+
 		this.addComponentListener( listener );
 		this.addMouseListener( new MouseAdapter()
 		{
@@ -190,7 +204,27 @@ public class PointCloudCanvas extends AWTGLCanvas
 	{
 		this.xyData = xyData;
 		this.updateXY = true;
-	}
+		// Update min & max.
+		float minX = Float.POSITIVE_INFINITY;
+		float minY = Float.POSITIVE_INFINITY;
+		float maxX = Float.NEGATIVE_INFINITY;
+		float maxY = Float.NEGATIVE_INFINITY;
+		for ( int i = 0; i < xyData.length; i++ )
+		{
+			final float x = xyData[i];
+			minX = Math.min( minX, x );
+			maxX = Math.max( maxX, x );
+			
+			i++;
+			final float y = xyData[i];
+			minY = Math.min( minY, y );
+			maxY = Math.max( maxY, y );
+		}
+		this.layoutMinX = minX;
+		this.layoutMinY = minY;
+		this.layoutMaxX = maxX;
+		this.layoutMaxY = maxY;
+		}
 
 	public void putColors( final float[] colorData )
 	{
@@ -301,21 +335,6 @@ public class PointCloudCanvas extends AWTGLCanvas
 		swapBuffers();
 	}
 
-	private final float[] projectionMatrix = new float[ 16 ];
-
-	public float[] getProjectionMatrix( )
-	{
-		if ( GL.getCapabilities() == null )
-			return new float[] { -1, 1, -1, 1 };
-		
-		GL11.glGetFloatv( GL11.GL_PROJECTION_MATRIX, projectionMatrix );
-		final float xmin = projectionMatrix[ 0 ] * ( -1 ) + projectionMatrix[ 12 ];
-		final float xmax = projectionMatrix[ 0 ] * 1 + projectionMatrix[ 12 ];
-		final float ymin = projectionMatrix[ 5 ] * ( -1 ) + projectionMatrix[ 13 ];
-		final float ymax = projectionMatrix[ 5 ] * 1 + projectionMatrix[ 13 ];
-		return new float[] { xmin, xmax, ymin, ymax };
-	}
-
 	public int getFramebufferWidth()
 	{
 		return framebufferWidth;
@@ -330,4 +349,34 @@ public class PointCloudCanvas extends AWTGLCanvas
 	{
 		t.set( transform );
 	}
+//
+//	/**
+//	 * Exposes the screen transform that controls the 2D view of this canvas.
+//	 * 
+//	 * @return the {@link ScreenTransform}.
+//	 */
+//	public ScreenTransform getTransform()
+//	{
+//		return t;
+//	}
+//
+//	public float getMinLayoutX()
+//	{
+//		return layoutMinX;
+//	}
+//
+//	public float getMinLayoutY()
+//	{
+//		return layoutMinY;
+//	}
+//
+//	public float getMaxLayoutX()
+//	{
+//		return layoutMaxX;
+//	}
+//
+//	public float getMaxLayoutY()
+//	{
+//		return layoutMaxY;
+//	}
 }
