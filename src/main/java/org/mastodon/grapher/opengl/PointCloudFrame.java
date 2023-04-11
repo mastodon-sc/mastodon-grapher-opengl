@@ -48,7 +48,7 @@ public class PointCloudFrame extends ViewFrame
 			final GroupHandle groupHandle,
 			final DataDisplayOptions optional )
 	{
-		super( "Grapher" );
+		super( "OpenGL Grapher" );
 
 		/*
 		 * Plot panel.
@@ -63,7 +63,7 @@ public class PointCloudFrame extends ViewFrame
 
 		final ContextChooser< Spot > contextChooser = new ContextChooser<>( dataDisplayPanel );
 		sidePanel = new GrapherSidePanel( nSources, contextChooser );
-		sidePanel.btnPlot.addActionListener( e -> dataDisplayPanel.plot( sidePanel.getGraphConfig() ) );
+		sidePanel.getBtnPlot().addActionListener( e -> dataDisplayPanel.plot( sidePanel.getGraphConfig() ) );
 
 		final FeatureModelListener featureModelListener = () -> sidePanel.setFeatures(
 				FeatureUtils.collectFeatureMap( featureModel, Spot.class ),
@@ -79,7 +79,7 @@ public class PointCloudFrame extends ViewFrame
 				sidePanel, dataDisplayPanel );
 		mainPanel.setOneTouchExpandable( true );
 		mainPanel.setBorder( null );
-		mainPanel.setDividerLocation( 250 );
+		mainPanel.setDividerLocation( 300 );
 
 		add( mainPanel, BorderLayout.CENTER );
 
@@ -94,7 +94,6 @@ public class PointCloudFrame extends ViewFrame
 		//		final ContextChooserPanel< ? > contextChooserPanel = new ContextChooserPanel<>( contextChooser );
 		//		settingsPanel.add( contextChooserPanel );
 
-		pack();
 		setDefaultCloseOperation( WindowConstants.DISPOSE_ON_CLOSE );
 		addWindowListener( new WindowAdapter()
 		{
@@ -115,6 +114,7 @@ public class PointCloudFrame extends ViewFrame
 		mouseAndKeyHandler.setKeypressManager( optional.values.getKeyPressedManager(), dataDisplayPanel.getCanvas() );
 		dataDisplayPanel.getCanvas().addHandler( mouseAndKeyHandler );
 		setLocation( optional.values.getX(), optional.values.getY() );
+		pack();
 	}
 
 	public GrapherSidePanel getVertexSidePanel()

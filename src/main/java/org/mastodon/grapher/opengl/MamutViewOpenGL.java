@@ -1,20 +1,54 @@
 package org.mastodon.grapher.opengl;
 
+import static org.mastodon.app.ui.ViewMenuBuilder.item;
+import static org.mastodon.app.ui.ViewMenuBuilder.separator;
+import static org.mastodon.mamut.MamutMenuBuilder.colorMenu;
+import static org.mastodon.mamut.MamutMenuBuilder.editMenu;
+import static org.mastodon.mamut.MamutMenuBuilder.tagSetMenu;
+import static org.mastodon.mamut.MamutMenuBuilder.viewMenu;
+import static org.mastodon.mamut.MamutViewStateSerialization.FEATURE_COLOR_MODE_KEY;
+import static org.mastodon.mamut.MamutViewStateSerialization.NO_COLORING_KEY;
+import static org.mastodon.mamut.MamutViewStateSerialization.TAG_SET_KEY;
+
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.swing.ActionMap;
+import javax.swing.JComponent;
+
 import org.mastodon.app.IdentityViewGraph;
 import org.mastodon.app.ViewGraph;
+import org.mastodon.app.ui.MastodonFrameViewActions;
+import org.mastodon.app.ui.ViewMenu;
+import org.mastodon.app.ui.ViewMenuBuilder.JMenuHandle;
+import org.mastodon.mamut.MainWindow;
 import org.mastodon.mamut.MamutAppModel;
+import org.mastodon.mamut.MamutMenuBuilder;
 import org.mastodon.mamut.MamutView;
+import org.mastodon.mamut.UndoActions;
 import org.mastodon.mamut.feature.SpotPositionFeature;
 import org.mastodon.mamut.model.Link;
 import org.mastodon.mamut.model.Model;
 import org.mastodon.mamut.model.Spot;
+import org.mastodon.mamut.model.branch.BranchLink;
+import org.mastodon.mamut.model.branch.BranchSpot;
 import org.mastodon.model.AutoNavigateFocusModel;
+import org.mastodon.model.tag.TagSetStructure.TagSet;
+import org.mastodon.ui.SelectionActions;
+import org.mastodon.ui.coloring.ColoringModelMain;
 import org.mastodon.ui.coloring.GraphColorGeneratorAdapter;
+import org.mastodon.ui.coloring.feature.FeatureColorMode;
 import org.mastodon.ui.keymap.KeyConfigContexts;
 import org.mastodon.views.grapher.display.FeatureGraphConfig;
 import org.mastodon.views.grapher.display.FeatureGraphConfig.GraphDataItemsSource;
 import org.mastodon.views.grapher.display.FeatureSpecPair;
 import org.mastodon.views.grapher.display.style.DataDisplayStyle;
+import org.mastodon.views.trackscheme.display.ColorBarOverlay;
+import org.mastodon.views.trackscheme.display.ColorBarOverlay.Position;
 import org.scijava.ui.behaviour.KeyPressedManager;
 
 public class MamutViewOpenGL extends MamutView< ViewGraph< Spot, Link, Spot, Link >, Spot, Link >
@@ -24,7 +58,16 @@ public class MamutViewOpenGL extends MamutView< ViewGraph< Spot, Link, Spot, Lin
 
 	private final PointCloudPanel dataDisplayPanel;
 
+	private final ColoringModelMain< Spot, Link, BranchSpot, BranchLink > coloringModel;
+
+	private final ColorBarOverlay colorbarOverlay;
+
 	public MamutViewOpenGL( final MamutAppModel appModel )
+	{
+		this(appModel, new HashMap<>());
+	}
+	
+	public MamutViewOpenGL( final MamutAppModel appModel, final Map< String, Object > guiState )
 	{
 		super( appModel,
 				createViewGraph( appModel ),
@@ -74,6 +117,111 @@ public class MamutViewOpenGL extends MamutView< ViewGraph< Spot, Link, Spot, Lin
 		dataDisplayPanel.getTransformEventHandler().zoomTo( -10000, 10000, -10000, 10000 );
 		dataDisplayPanel.getTransformEventHandler().install( viewBehaviours );
 
+		/*
+		 * Menus
+		 */
+		final ViewMenu menu = new ViewMenu( this );
+		final ActionMap actionMap = frame.getKeybindings().getConcatenatedActionMap();
+
+		final JMenuHandle coloringMenuHandle = new JMenuHandle();
+		final JMenuHandle tagSetMenuHandle = new JMenuHandle();
+
+		MainWindow.addMenus( menu, actionMap );
+		MamutMenuBuilder.build( menu, actionMap,
+				viewMenu(
+						colorMenu( coloringMenuHandle ),
+						separator(),
+						item( MastodonFrameViewActions.TOGGLE_SETTINGS_PANEL ) ),
+				editMenu(
+						item( UndoActions.UNDO ),
+						item( UndoActions.REDO ),
+						separator(),
+						item( SelectionActions.DELETE_SELECTION ),
+						item( SelectionActions.SELECT_WHOLE_TRACK ),
+						item( SelectionActions.SELECT_TRACK_DOWNWARD ),
+						item( SelectionActions.SELECT_TRACK_UPWARD ),
+						separator(),
+						tagSetMenu( tagSetMenuHandle ) ) );
+		appModel.getPlugins().addMenus( menu );
+
+		/*
+		 * Coloring & colobar.
+		 */
+		coloringModel = registerColoring( coloringAdapter, coloringMenuHandle,
+				() -> frame.repaint() ); // TODO update colors
+		registerTagSetMenu( tagSetMenuHandle,
+				() -> frame.repaint() ); // TODO update colors
+		colorbarOverlay = new ColorBarOverlay( coloringModel, () -> frame.getVertexSidePanel().getBackground() );
+		colorbarOverlay.setVisible( true );
+		colorbarOverlay.setPosition( Position.BOTTOM_LEFT );
+
+		// Restore coloring.
+		final Boolean noColoring = ( Boolean ) guiState.get( NO_COLORING_KEY );
+		if ( null != noColoring && noColoring )
+		{
+			coloringModel.colorByNone();
+		}
+		else
+		{
+			final String tagSetName = ( String ) guiState.get( TAG_SET_KEY );
+			final String featureColorModeName = ( String ) guiState.get( FEATURE_COLOR_MODE_KEY );
+			if ( null != tagSetName )
+			{
+				for ( final TagSet tagSet : coloringModel.getTagSetStructure().getTagSets() )
+				{
+					if ( tagSet.getName().equals( tagSetName ) )
+					{
+						coloringModel.colorByTagSet( tagSet );
+						break;
+					}
+				}
+			}
+			else if ( null != featureColorModeName )
+			{
+				final List< FeatureColorMode > featureColorModes = new ArrayList<>();
+				featureColorModes.addAll( coloringModel.getFeatureColorModeManager().getBuiltinStyles() );
+				featureColorModes.addAll( coloringModel.getFeatureColorModeManager().getUserStyles() );
+				for ( final FeatureColorMode featureColorMode : featureColorModes )
+				{
+					if ( featureColorMode.getName().equals( featureColorModeName ) )
+					{
+						coloringModel.colorByFeature( featureColorMode );
+						break;
+					}
+				}
+			}
+		}
+
+		/*
+		 * Add the colorbar to the side panel, by hacking its layout.
+		 */
+
+		final JComponent sideCanvas = new JComponent()
+		{
+
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			protected void paintComponent( final java.awt.Graphics g )
+			{
+				System.out.println( "apint!" );
+				colorbarOverlay.drawOverlays( g );
+			}
+		};
+		sideCanvas.setPreferredSize( new Dimension( 250, 80 ) );
+		final GridBagConstraints gbc = new GridBagConstraints();
+		gbc.anchor = GridBagConstraints.SOUTH;
+		gbc.gridx = 0;
+		gbc.gridy = 13;
+		gbc.fill = GridBagConstraints.BOTH;
+		frame.getVertexSidePanel().add( sideCanvas, gbc );
+		colorbarOverlay.setCanvasSize( sideCanvas.getWidth(), sideCanvas.getHeight() );
+
+		frame.setVisible( true );
+		dataDisplayPanel.repaint();
+		dataDisplayPanel.getCanvas().requestFocusInWindow();
+
+		frame.setSize( 800, 550 );
 		frame.setVisible( true );
 	}
 
