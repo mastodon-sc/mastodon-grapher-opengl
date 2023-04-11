@@ -20,7 +20,6 @@ import org.lwjgl.opengl.GL15C;
 import org.mastodon.grapher.opengl.DataLayout;
 import org.mastodon.grapher.opengl.InertialScreenTransformEventHandler;
 import org.mastodon.grapher.opengl.LayoutChangeListener;
-import org.mastodon.ui.coloring.ColorMap;
 import org.mastodon.views.grapher.display.FeatureGraphConfig;
 import org.scijava.listeners.Listeners;
 
@@ -74,7 +73,7 @@ public class DataPointsOverlay implements GLOverlayRenderer
 		return layoutChangeListeners;
 	}
 
-	public void putCoords( final float[] xyData )
+	private void putCoords( final float[] xyData )
 	{
 		this.xyData = xyData;
 		this.updateXY = true;
@@ -101,7 +100,7 @@ public class DataPointsOverlay implements GLOverlayRenderer
 		layoutChangeListeners.list.forEach( l -> l.layoutChanged( layoutMinX, layoutMaxX, layoutMinY, layoutMaxY ) );
 	}
 
-	public void putColors( final float[] colorData )
+	private void putColors( final float[] colorData )
 	{
 		this.colorData = colorData;
 		this.updateColor = true;
@@ -194,32 +193,15 @@ public class DataPointsOverlay implements GLOverlayRenderer
 	public void plot( final FeatureGraphConfig graphConfig )
 	{
 		final float[] xy = layout.layout();
-
-		final int n = xy.length / 2;
-		final int COLOR_SIZE = 4;
-		final float[] color = new float[ COLOR_SIZE * n ];
-
-		final ColorMap cm = ColorMap.getColorMap( ColorMap.JET.getName() );
-		for ( int i = 0; i < n; i++ )
-		{
-			final float alpha = ( float ) i / n;
-			final int c = cm.get( alpha );
-			final int a = ( c >> 24 ) & 0xFF;
-			final int r = ( c >> 16 ) & 0xFF;
-			final int g = ( c >> 8 ) & 0xFF;
-			final int b = c & 255;
-
-			// RGBA
-			color[ COLOR_SIZE * i + 0 ] = ( r / 255f );
-			color[ COLOR_SIZE * i + 1 ] = ( g / 255f );
-			color[ COLOR_SIZE * i + 2 ] = ( b / 255f );
-			color[ COLOR_SIZE * i + 3 ] = ( a / 255f );
-		}
-
+		final float[] color = layout.color();
 		putCoords( xy );
 		putColors( color );
 		transformHandler.layoutChanged( xy );
 	}
-
-
+	
+	public void updateColors()
+	{
+		final float[] color = layout.color();
+		putColors( color );
+	}
 }

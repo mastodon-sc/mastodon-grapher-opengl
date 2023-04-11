@@ -80,7 +80,6 @@ public class PointCloudPanel extends JPanel implements Paintable, ContextListene
 	{
 		super( new BorderLayout(), false );
 		this.layout = layout;
-		setBackground( Color.BLACK );
 		final int w = 400;
 		final int h = 400;
 		setPreferredSize( new Dimension( w, h ) );
@@ -215,6 +214,12 @@ public class PointCloudPanel extends JPanel implements Paintable, ContextListene
 		dataPointsOverlay.plot( gc );
 	}
 
+	public void updateColor()
+	{
+		dataPointsOverlay.updateColors();
+		paint();
+	}
+
 	@Override
 	public void layoutChanged( final float layoutMinX, final float layoutMaxX, final float layoutMinY, final float layoutMaxY )
 	{
@@ -249,8 +254,8 @@ public class PointCloudPanel extends JPanel implements Paintable, ContextListene
 		@Override
 		protected void paintComponent( final Graphics g )
 		{
-			final Color bgColor = Color.BLACK;
-			final Color fgColor = Color.WHITE;
+			final Color bgColor = PointCloudCanvas.BACKGROUND_COLOR;
+			final Color fgColor = Color.BLACK;
 			final Font tickFont = getFont().deriveFont( getFont().getSize2D() - 2f );
 			final Font labelFont = getFont(); // .deriveFont( Font.BOLD );
 			final Stroke tickStroke = new BasicStroke();
@@ -340,8 +345,8 @@ public class PointCloudPanel extends JPanel implements Paintable, ContextListene
 		@Override
 		protected void paintComponent( final Graphics g )
 		{
-			final Color bgColor = Color.BLACK;
-			final Color fgColor = Color.WHITE;
+			final Color bgColor = PointCloudCanvas.BACKGROUND_COLOR;
+			final Color fgColor = Color.BLACK;
 			final Font tickFont = getFont().deriveFont( getFont().getSize2D() - 2f );
 			final Font labelFont = getFont(); // .deriveFont( Font.BOLD );
 			final Stroke tickStroke = new BasicStroke();

@@ -3,8 +3,10 @@ package org.mastodon.grapher.opengl;
 import static org.lwjgl.opengl.GL.createCapabilities;
 import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
 import static org.lwjgl.opengl.GL11.glClear;
+import static org.lwjgl.opengl.GL11.glClearColor;
 import static org.lwjgl.opengl.GL11C.GL_DEPTH_BUFFER_BIT;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ComponentAdapter;
@@ -31,6 +33,9 @@ public class PointCloudCanvas extends AWTGLCanvas
 {
 
 	private static final long serialVersionUID = 1L;
+
+	// TODO move into a style.
+	public static final Color BACKGROUND_COLOR = new Color( 204, 204, 204 );
 
 	private int framebufferWidth;
 
@@ -186,6 +191,9 @@ public class PointCloudCanvas extends AWTGLCanvas
 	public void paintGL()
 	{
 		GL.createCapabilities();
+		final float[] gbColArr = new float[ 4 ];
+		BACKGROUND_COLOR.getComponents( gbColArr );
+		glClearColor( gbColArr[ 0 ], gbColArr[ 1 ], gbColArr[ 2 ], gbColArr[ 3 ] );
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
 		GL11.glMatrixMode( GL11.GL_PROJECTION );

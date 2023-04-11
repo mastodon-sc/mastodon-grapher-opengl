@@ -15,6 +15,7 @@ import org.mastodon.mamut.model.Link;
 import org.mastodon.mamut.model.ModelGraph;
 import org.mastodon.mamut.model.Spot;
 import org.mastodon.model.SelectionModel;
+import org.mastodon.ui.coloring.GraphColorGenerator;
 import org.mastodon.views.context.Context;
 import org.mastodon.views.context.ContextListener;
 import org.mastodon.views.grapher.display.FeatureGraphConfig;
@@ -51,11 +52,18 @@ public class DataLayout implements ContextListener< Spot >
 
 	private Context< Spot > context;
 
-	public DataLayout( final ModelGraph graph, final SelectionModel< Spot, Link > selection, final FeatureModel featureModel )
+	private final GraphColorGenerator< Spot, Link > graphColorGenerator;
+
+	public DataLayout(
+			final ModelGraph graph,
+			final SelectionModel< Spot, Link > selection,
+			final FeatureModel featureModel,
+			final GraphColorGenerator< Spot, Link > graphColorGenerator )
 	{
 		this.graph = graph;
 		this.selection = selection;
 		this.featureModel = featureModel;
+		this.graphColorGenerator = graphColorGenerator;
 	}
 
 	private void setXFeatureVertex( final FeatureProjection< Spot > xproj )
@@ -104,9 +112,7 @@ public class DataLayout implements ContextListener< Spot >
 	public float[] layout()
 	{
 		if ( vertices.isEmpty() )
-		{
 			return new float[] {};
-		}
 
 		final int nPoints = vertices.size();
 		final float[] out = new float[ 2 * nPoints ];
@@ -122,6 +128,56 @@ public class DataLayout implements ContextListener< Spot >
 			}
 		}
 		return out;
+	}
+
+	/**
+	 * Updates the color of the objects displayed based on the color generator
+	 * specified at construction.
+	 * 
+	 * @return a <code>float[]</code> array, to be used by the OpenGL logic.
+	 */
+	public float[] color()
+	{
+		if ( vertices.isEmpty() )
+			return new float[] {};
+
+		final int n = vertices.size();
+		final int COLOR_SIZE = 4;
+		final float[] color = new float[ COLOR_SIZE * n ];
+
+		int i = 0;
+		for ( final Spot spot : vertices )
+		{
+			final int a;
+			final int r;
+			final int g;
+			final int b;
+			final int c = graphColorGenerator.color( spot );
+			if ( c == 0 )
+			{
+				// Default cColor from the style. TODO
+				a = 255;
+				r = 0;
+				g = 0;
+				b = 0;
+			}
+			else
+			{
+				// Color from the colormap.
+				a = ( c >> 24 ) & 0xFF;
+				r = ( c >> 16 ) & 0xFF;
+				g = ( c >> 8 ) & 0xFF;
+				b = c & 255;
+			}
+
+			// RGBA
+			color[ COLOR_SIZE * i + 0 ] = ( r / 255f );
+			color[ COLOR_SIZE * i + 1 ] = ( g / 255f );
+			color[ COLOR_SIZE * i + 2 ] = ( b / 255f );
+			color[ COLOR_SIZE * i + 3 ] = ( a / 255f );
+			i++;
+		}
+		return color;
 	}
 
 	private final double getXFeatureValue( final Spot v )

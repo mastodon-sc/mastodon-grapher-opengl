@@ -54,8 +54,8 @@ public class PointCloudFrame extends ViewFrame
 		 * Plot panel.
 		 */
 
-		final DataLayout layout = new DataLayout( graph, selection, featureModel );
-		dataDisplayPanel = new PointCloudPanel(layout);
+		final DataLayout layout = new DataLayout( graph, selection, featureModel, optional.values.getGraphColorGenerator() );
+		dataDisplayPanel = new PointCloudPanel( layout );
 
 		/*
 		 * Side panel.
@@ -78,6 +78,7 @@ public class PointCloudFrame extends ViewFrame
 		final JSplitPane mainPanel = new JSplitPane( JSplitPane.HORIZONTAL_SPLIT,
 				sidePanel, dataDisplayPanel );
 		mainPanel.setOneTouchExpandable( true );
+		mainPanel.setContinuousLayout( true );
 		mainPanel.setBorder( null );
 		mainPanel.setDividerLocation( 300 );
 

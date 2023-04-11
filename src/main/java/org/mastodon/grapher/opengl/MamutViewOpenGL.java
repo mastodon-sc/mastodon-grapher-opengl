@@ -147,10 +147,8 @@ public class MamutViewOpenGL extends MamutView< ViewGraph< Spot, Link, Spot, Lin
 		/*
 		 * Coloring & colobar.
 		 */
-		coloringModel = registerColoring( coloringAdapter, coloringMenuHandle,
-				() -> frame.repaint() ); // TODO update colors
-		registerTagSetMenu( tagSetMenuHandle,
-				() -> frame.repaint() ); // TODO update colors
+		coloringModel = registerColoring( coloringAdapter, coloringMenuHandle, () -> remapColor() );
+		registerTagSetMenu( tagSetMenuHandle, () -> remapColor() );
 		colorbarOverlay = new ColorBarOverlay( coloringModel, () -> frame.getVertexSidePanel().getBackground() );
 		colorbarOverlay.setVisible( true );
 		colorbarOverlay.setPosition( Position.BOTTOM_LEFT );
@@ -204,18 +202,17 @@ public class MamutViewOpenGL extends MamutView< ViewGraph< Spot, Link, Spot, Lin
 			@Override
 			protected void paintComponent( final java.awt.Graphics g )
 			{
-				System.out.println( "apint!" );
 				colorbarOverlay.drawOverlays( g );
 			}
 		};
 		sideCanvas.setPreferredSize( new Dimension( 250, 80 ) );
 		final GridBagConstraints gbc = new GridBagConstraints();
-		gbc.anchor = GridBagConstraints.SOUTH;
+		gbc.anchor = GridBagConstraints.SOUTHWEST;
 		gbc.gridx = 0;
 		gbc.gridy = 13;
 		gbc.fill = GridBagConstraints.BOTH;
 		frame.getVertexSidePanel().add( sideCanvas, gbc );
-		colorbarOverlay.setCanvasSize( sideCanvas.getWidth(), sideCanvas.getHeight() );
+		colorbarOverlay.setCanvasSize( 250, 80 );
 
 		frame.setVisible( true );
 		dataDisplayPanel.repaint();
@@ -223,6 +220,12 @@ public class MamutViewOpenGL extends MamutView< ViewGraph< Spot, Link, Spot, Lin
 
 		frame.setSize( 800, 550 );
 		frame.setVisible( true );
+	}
+
+	private void remapColor()
+	{
+		dataDisplayPanel.updateColor();
+		getFrame().repaint();
 	}
 
 	private static ViewGraph< Spot, Link, Spot, Link > createViewGraph( final MamutAppModel appModel )
