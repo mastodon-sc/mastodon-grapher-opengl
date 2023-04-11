@@ -193,7 +193,6 @@ public class DataPointsOverlay implements GLOverlayRenderer
 
 	public void plot( final FeatureGraphConfig graphConfig )
 	{
-		layout.setConfig( graphConfig );
 		final float[] xy = layout.layout();
 
 		final int n = xy.length / 2;
