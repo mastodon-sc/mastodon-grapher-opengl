@@ -220,22 +220,22 @@ public class DataLayout implements ContextListener< Spot >
 		String xlabel = gc.getXFeature().toString();
 		if ( !xunits.isEmpty() )
 			xlabel += " (" + xunits + ")";
-		setXLabel( xlabel );
+		this.xlabel = xlabel;
 
 		String ylabel = gc.getYFeature().toString();
 		if ( !yunits.isEmpty() )
 			ylabel += " (" + yunits + ")";
-		setYLabel( ylabel );
-	}
-
-	private void setYLabel( final String ylabel )
-	{
 		this.ylabel = ylabel;
 	}
 
-	private void setXLabel( final String xlabel )
+	public String getXLabel()
 	{
-		this.xlabel = xlabel;
+		return xlabel;
+	}
+
+	public String getYLabel()
+	{
+		return ylabel;
 	}
 
 	private void setVertices( final Collection< Spot > vertices )
