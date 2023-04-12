@@ -18,6 +18,7 @@ import javax.swing.JScrollBar;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
+import org.mastodon.grapher.opengl.overlays.DataEdgesOverlay;
 import org.mastodon.grapher.opengl.overlays.DataPointsOverlay;
 import org.mastodon.mamut.model.Spot;
 import org.mastodon.views.context.Context;
@@ -76,6 +77,8 @@ public class PointCloudPanel extends JPanel implements Paintable, ContextListene
 
 	private final DataLayoutMaker layout;
 
+	private DataEdgesOverlay dataEdgesOverlay;
+
 	public PointCloudPanel( final DataLayoutMaker layout )
 	{
 		super( new BorderLayout(), false );
@@ -95,9 +98,11 @@ public class PointCloudPanel extends JPanel implements Paintable, ContextListene
 		screenTransform.listeners().add( this );
 
 		// Overlays for the canvas.
+		this.dataEdgesOverlay = new DataEdgesOverlay( layout );
 		this.dataPointsOverlay = new DataPointsOverlay( layout, transformHandler );
 		dataPointsOverlay.getLayoutChangeListeners().add( this );
-		canvas.overlays().add( dataPointsOverlay );
+		canvas.overlays().add( dataEdgesOverlay );
+//		canvas.overlays().add( dataPointsOverlay );
 
 		// Bottom axis.
 		final JPanel xAxis = new MyXAxisPanel( canvas.t );
@@ -212,10 +217,12 @@ public class PointCloudPanel extends JPanel implements Paintable, ContextListene
 	{
 		layout.setConfig( gc );
 		dataPointsOverlay.plot( gc );
+		dataEdgesOverlay.plot( gc );
 	}
 
 	public void updateColor()
 	{
+		dataPointsOverlay.updateColors();
 		dataPointsOverlay.updateColors();
 		paint();
 	}

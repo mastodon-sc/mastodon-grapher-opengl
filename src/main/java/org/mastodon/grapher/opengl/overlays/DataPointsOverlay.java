@@ -22,23 +22,11 @@ public class DataPointsOverlay implements GLOverlayRenderer
 
 	private int vboVertexColorHandle;
 
-	private int iboEdgeIndexHandle;
-
-	private int vboEdgePositionHandle;
-
-	private int vboEdgeColorHandle;
-
 	private final float pointSize = 5.1f;
 
 	private float[] vertexPosData = new float[] {};
 
 	private float[] vertexColorData = new float[] {};
-
-	private int[] edgeIndexData = new int[] {};
-
-	private float[] edgePosData = new float[] {};
-
-	private float[] edgesColorData = new float[] {};
 
 	private boolean updateXY;
 
@@ -62,11 +50,9 @@ public class DataPointsOverlay implements GLOverlayRenderer
 		return layoutChangeListeners;
 	}
 
-	private void putCoords( final float[] vertexPosData, final int[] indices, final float[] edgePosData )
+	private void putCoords( final float[] vertexPosData )
 	{
 		this.vertexPosData = vertexPosData;
-		this.edgeIndexData = indices;
-		this.edgePosData = edgePosData;
 		this.updateXY = true;
 		// Update min & max.
 		float minX = Float.POSITIVE_INFINITY;
@@ -91,10 +77,9 @@ public class DataPointsOverlay implements GLOverlayRenderer
 		layoutChangeListeners.list.forEach( l -> l.layoutChanged( layoutMinX, layoutMaxX, layoutMinY, layoutMaxY ) );
 	}
 
-	private void putColors( final float[] verticesColor, final float[] edgesColor )
+	private void putColors( final float[] verticesColor )
 	{
 		this.vertexColorData = verticesColor;
-		this.edgesColorData = edgesColor;
 		this.updateColor = true;
 	}
 
@@ -103,10 +88,7 @@ public class DataPointsOverlay implements GLOverlayRenderer
 	{
 		// New handles.
 		this.vboVertexPositionHandle = GL33.glGenBuffers();
-		this.vboEdgePositionHandle = GL33.glGenBuffers();
 		this.vboVertexColorHandle = GL33.glGenBuffers();
-		this.iboEdgeIndexHandle = GL33.glGenBuffers();
-		this.vboEdgeColorHandle = GL33.glGenBuffers();
 	}
 
 	@Override
@@ -123,18 +105,6 @@ public class DataPointsOverlay implements GLOverlayRenderer
 			GL33.glBufferData( GL33.GL_ARRAY_BUFFER, vertexPosData, GL33.GL_STATIC_DRAW );
 			GL33.glVertexPointer( VERTEX_SIZE, GL33.GL_FLOAT, 0, 0 );
 			GL33.glBindBuffer( GL33.GL_ARRAY_BUFFER, 0 );
-
-			// Update edge indices.
-			GL33.glBindBuffer( GL33.GL_ELEMENT_ARRAY_BUFFER, iboEdgeIndexHandle );
-			GL33.glBufferData( GL33.GL_ELEMENT_ARRAY_BUFFER, edgeIndexData, GL33.GL_STATIC_DRAW );
-			GL33.glVertexPointer( EDGE_SIZE, GL33.GL_UNSIGNED_INT, 0, 0 );
-			GL33.glBindBuffer( GL33.GL_ARRAY_BUFFER, 0 );
-
-			// Update edge position.
-			GL33.glBindBuffer( GL33.GL_ARRAY_BUFFER, vboEdgePositionHandle );
-			GL33.glBufferData( GL33.GL_ARRAY_BUFFER, edgePosData, GL33.GL_STATIC_DRAW );
-			GL33.glVertexPointer( VERTEX_SIZE, GL33.GL_FLOAT, 0, 0 );
-			GL33.glBindBuffer( GL33.GL_ARRAY_BUFFER, 0 );
 		}
 		if ( updateColor )
 		{
@@ -144,11 +114,6 @@ public class DataPointsOverlay implements GLOverlayRenderer
 			GL33.glBindBuffer( GL33.GL_ARRAY_BUFFER, vboVertexColorHandle );
 			GL33.glBufferData( GL33.GL_ARRAY_BUFFER, vertexColorData, GL33.GL_STATIC_DRAW );
 			GL33.glBindBuffer( GL33.GL_ARRAY_BUFFER, 0 );
-
-			// Update edge colors.
-			GL33.glBindBuffer( GL33.GL_ARRAY_BUFFER, vboEdgeColorHandle );
-			GL33.glBufferData( GL33.GL_ARRAY_BUFFER, edgesColorData, GL33.GL_STATIC_DRAW );
-			GL33.glBindBuffer( GL33.GL_ARRAY_BUFFER, 0 );
 		}
 
 		/*
@@ -157,26 +122,6 @@ public class DataPointsOverlay implements GLOverlayRenderer
 
 		GL33.glEnableClientState( GL33.GL_VERTEX_ARRAY );
 		GL33.glEnableClientState( GL33.GL_COLOR_ARRAY );
-
-		/*
-		 * Draw edges.
-		 */
-
-		// Enable and set the position attribute.
-		GL33.glEnableVertexAttribArray( 1 );
-		GL33.glVertexAttribPointer( 1, VERTEX_SIZE, GL33.GL_FLOAT, false, 0, 0 );
-
-		// Edge colors.
-		GL33.glBindBuffer( GL33.GL_ARRAY_BUFFER, vboEdgeColorHandle );
-		GL33.glColorPointer( COLOR_SIZE, GL33.GL_FLOAT, 0, 0 );
-
-		// Draw the line segments using the indices.
-		GL33.glDrawElements( GL33.GL_LINES, edgeIndexData.length, GL33.GL_UNSIGNED_INT, 0 );
-		GL33.glBindBuffer( GL33.GL_ARRAY_BUFFER, 0 );
-
-		// Disable the position attribute.
-		GL33.glDisableVertexAttribArray( 1 );
-
 
 		/*
 		 * Draw vertices.
@@ -201,15 +146,15 @@ public class DataPointsOverlay implements GLOverlayRenderer
 	public void plot( final FeatureGraphConfig graphConfig )
 	{
 		final DataLayout l = layout.layout();
-		putCoords( l.verticesPos, l.edgeIndices, l.edgePositions );
+		putCoords( l.verticesPos );
 		final DataColor c = layout.color();
-		putColors( c.verticesColor, c.edgesColor );
+		putColors( c.verticesColor );
 		transformHandler.layoutChanged( l.verticesPos );
 	}
 
 	public void updateColors()
 	{
 		final DataColor c = layout.color();
-		putColors( c.verticesColor, c.edgesColor );
+		putColors( c.verticesColor );
 	}
 }
