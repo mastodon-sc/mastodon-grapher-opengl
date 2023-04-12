@@ -1,8 +1,9 @@
 package org.mastodon.grapher.opengl;
 
+import static org.mastodon.grapher.opengl.overlays.DataPointsOverlay.COLOR_SIZE;
+import static org.mastodon.grapher.opengl.overlays.DataPointsOverlay.VERTEX_SIZE;
+
 import org.mastodon.collection.RefCollections;
-import org.mastodon.collection.RefIntMap;
-import org.mastodon.collection.RefMaps;
 import org.mastodon.collection.RefSet;
 import org.mastodon.feature.FeatureModel;
 import org.mastodon.feature.FeatureProjection;
@@ -19,9 +20,6 @@ import org.mastodon.views.context.Context;
 import org.mastodon.views.context.ContextListener;
 import org.mastodon.views.grapher.display.FeatureGraphConfig;
 import org.mastodon.views.grapher.display.FeatureSpecPair;
-
-import gnu.trove.list.array.TIntArrayList;
-import gnu.trove.set.hash.TIntHashSet;
 
 public class DataLayoutMaker implements ContextListener< Spot >
 {
@@ -47,6 +45,8 @@ public class DataLayoutMaker implements ContextListener< Spot >
 	private final SelectionModel< Spot, Link > selection;
 
 	private RefSet< Spot > vertices;
+
+	private RefSet< Link > edges;
 
 	private String xlabel;
 
@@ -106,33 +106,27 @@ public class DataLayoutMaker implements ContextListener< Spot >
 	}
 
 	/**
-	 * Resets X and Y position based on the current feature specifications for
-	 * the current vertices in the data graph.
+	 * Returns a new data layout containing the data points position and their
+	 * links based on the current feature specifications for the current
+	 * vertices in the data graph.
 	 * 
-	 * @return
+	 * @return a new {@link DataLayout}.
 	 */
 	public DataLayout layout()
 	{
 		if ( vertices.isEmpty() )
-			return new DataLayout( new float[] {}, new int[] {} );
+			return new DataLayout( new float[] {}, new int[] {}, new float[] {} );
 
 		/*
 		 * Vertex pos.
 		 */
 
-		// Map of index in the pos array for each vertices.
-		// Will be used later to build the edge index array.
-		final RefIntMap< Spot > vPosMap = RefMaps.createRefIntMap( vertices, -1 );
-
-		final int nPoints = vertices.size();
-		final float[] xyPos = new float[ 2 * nPoints ];
+		final float[] xyPos = new float[ VERTEX_SIZE * vertices.size() ];
 		if ( ( xpVertex != null || xpEdge != null ) && ( ypVertex != null || ypEdge != null ) )
 		{
 			int i = 0;
 			for ( final Spot v : vertices )
 			{
-				vPosMap.put( v, i / 2 );
-
 				final float x = ( float ) getXFeatureValue( v );
 				final float y = ( float ) getYFeatureValue( v );
 				xyPos[ i++ ] = x;
@@ -145,51 +139,59 @@ public class DataLayoutMaker implements ContextListener< Spot >
 		 */
 
 		final int[] edgeIndices;
+		final float[] edgePositions;
 		if ( paintEdges )
 		{
-			final TIntHashSet visited = new TIntHashSet( vertices.size() );
-			final TIntArrayList indexList = new TIntArrayList( vertices.size() * 2 );
+			edgeIndices = new int[ edges.size() * 2 ];
+			edgePositions = new float[ edges.size() * 2 * VERTEX_SIZE ];
+
 			final Spot sref = vertices.createRef();
 			final Spot tref = vertices.createRef();
-			for ( final Spot v : vertices )
+			int ii = 0;
+			int ip = 0;
+			for ( final Link e : edges )
 			{
-				for ( final Link e : v.edges() )
-				{
-					final int id = e.getInternalPoolIndex();
-					if ( visited.contains( id ) )
-						continue;
-					visited.add( id );
-
-					indexList.add( vPosMap.get( e.getSource( sref ) ) );
-					indexList.add( vPosMap.get( e.getTarget( tref ) ) );
-				}
+				final Spot source = e.getSource( sref );
+				final Spot target = e.getTarget( tref );
+				final float xs = ( float ) getXFeatureValue( source );
+				final float ys = ( float ) getYFeatureValue( source );
+				final float xt = ( float ) getXFeatureValue( target );
+				final float yt = ( float ) getYFeatureValue( target );
+				edgePositions[ ip++ ] = xs;
+				edgePositions[ ip++ ] = ys;
+				edgePositions[ ip++ ] = xt;
+				edgePositions[ ip++ ] = yt;
+				edgeIndices[ ii ] = ii++;
+				edgeIndices[ ii ] = ii++;
 			}
 			vertices.releaseRef( sref );
 			vertices.releaseRef( tref );
-			edgeIndices = indexList.toArray();
 		}
 		else
 		{
 			edgeIndices = new int[] {};
+			edgePositions = new float[] {};
 		}
-		return new DataLayout( xyPos, edgeIndices );
+		return new DataLayout( xyPos, edgeIndices, edgePositions );
 	}
 
 	/**
-	 * Updates the color of the objects displayed based on the color generator
-	 * specified at construction.
+	 * Returns a new color specification for the objects displayed based on the
+	 * color generator specified at construction.
 	 * 
-	 * @return a <code>float[]</code> array, to be used by the OpenGL logic.
+	 * @return a new {@link DataColor}, to be used by the OpenGL logic.
 	 */
-	public float[] color()
+	public DataColor color()
 	{
 		if ( vertices.isEmpty() )
-			return new float[] {};
+			return new DataColor( new float[] {}, new float[] {} );
+
+		/*
+		 * Vertex colors.
+		 */
 
 		final int n = vertices.size();
-		final int COLOR_SIZE = 4;
-		final float[] color = new float[ COLOR_SIZE * n ];
-
+		final float[] vertexColors = new float[ COLOR_SIZE * n ];
 		int i = 0;
 		for ( final Spot spot : vertices )
 		{
@@ -216,13 +218,88 @@ public class DataLayoutMaker implements ContextListener< Spot >
 			}
 
 			// RGBA
-			color[ COLOR_SIZE * i + 0 ] = ( r / 255f );
-			color[ COLOR_SIZE * i + 1 ] = ( g / 255f );
-			color[ COLOR_SIZE * i + 2 ] = ( b / 255f );
-			color[ COLOR_SIZE * i + 3 ] = ( a / 255f );
-			i++;
+			vertexColors[ i++ ] = ( r / 255f );
+			vertexColors[ i++ ] = ( g / 255f );
+			vertexColors[ i++ ] = ( b / 255f );
+			vertexColors[ i++ ] = ( a / 255f );
 		}
-		return color;
+
+		/*
+		 * Edge colors.
+		 */
+
+		final float[] edgeColors;
+		int j = 0;
+		if ( paintEdges )
+		{
+			edgeColors = new float[ edges.size() * COLOR_SIZE * 2 ];
+			final Spot sref = vertices.createRef();
+			final Spot tref = vertices.createRef();
+			for ( final Link e : edges )
+			{
+				e.getSource( sref );
+				e.getTarget( tref );
+				final int c = graphColorGenerator.color( e, sref, tref );
+				final int a;
+				final int r;
+				final int g;
+				final int b;
+				if ( c == 0 )
+				{
+					// Default cColor from the style. TODO
+					a = 255;
+					r = 0;
+					g = 0;
+					b = 0;
+				}
+				else
+				{
+					// Color from the colormap.
+					a = ( c >> 24 ) & 0xFF;
+					r = ( c >> 16 ) & 0xFF;
+					g = ( c >> 8 ) & 0xFF;
+					b = c & 255;
+				}
+
+				// RGBA
+				edgeColors[ j++ ] = r / 255f;
+				edgeColors[ j++ ] = g / 255f;
+				edgeColors[ j++ ] = b / 255f;
+				edgeColors[ j++ ] = a / 255f;
+				edgeColors[ j++ ] = r / 255f;
+				edgeColors[ j++ ] = g / 255f;
+				edgeColors[ j++ ] = b / 255f;
+				edgeColors[ j++ ] = a / 255f;
+			}
+			vertices.releaseRef( sref );
+			vertices.releaseRef( tref );
+		}
+		else
+		{
+			edgeColors = new float[] {};
+		}
+
+		return new DataColor( vertexColors, edgeColors );
+	}
+
+	private void setVertices( final RefSet< Spot > vertices )
+	{
+		this.vertices = vertices;
+		this.edges = RefCollections.createRefSet( graph.edges(), vertices.size() );
+		final Spot sref = vertices.createRef();
+		final Spot tref = vertices.createRef();
+		for ( final Spot v : vertices )
+		{
+			for ( final Link e : v.edges() )
+			{
+				final Spot source = e.getSource( sref );
+				final Spot target = e.getTarget( tref );
+				if ( vertices.contains( source ) && vertices.contains( target ) )
+					edges.add( e );
+			}
+		}
+		vertices.releaseRef( sref );
+		vertices.releaseRef( tref );
 	}
 
 	private final double getXFeatureValue( final Spot v )
@@ -339,11 +416,6 @@ public class DataLayoutMaker implements ContextListener< Spot >
 		return ylabel;
 	}
 
-	private void setVertices( final RefSet< Spot > vertices )
-	{
-		this.vertices = vertices;
-	}
-
 	private RefSet< Spot > fromContext()
 	{
 		final Iterable< Spot > iterable;
@@ -422,10 +494,26 @@ public class DataLayoutMaker implements ContextListener< Spot >
 
 		public final int[] edgeIndices;
 
-		public DataLayout( final float[] verticesPos, final int[] edgeIndices )
+		public final float[] edgePositions;
+
+		public DataLayout( final float[] verticesPos, final int[] edgeIndices, final float[] edgePositions )
 		{
 			this.verticesPos = verticesPos;
 			this.edgeIndices = edgeIndices;
+			this.edgePositions = edgePositions;
+		}
+	}
+
+	public static final class DataColor
+	{
+		public final float[] verticesColor;
+
+		public final float[] edgesColor;
+
+		public DataColor( final float[] verticesColor, final float[] edgesColor )
+		{
+			this.verticesColor = verticesColor;
+			this.edgesColor = edgesColor;
 		}
 	}
 }
