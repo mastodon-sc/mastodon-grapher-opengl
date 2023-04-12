@@ -54,7 +54,7 @@ public class PointCloudFrame extends ViewFrame
 		 * Plot panel.
 		 */
 
-		final DataLayout layout = new DataLayout( graph, selection, featureModel, optional.values.getGraphColorGenerator() );
+		final DataLayoutMaker layout = new DataLayoutMaker( graph, selection, featureModel, optional.values.getGraphColorGenerator() );
 		dataDisplayPanel = new PointCloudPanel( layout );
 
 		/*

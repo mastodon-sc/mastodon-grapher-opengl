@@ -1,9 +1,8 @@
 package org.mastodon.grapher.opengl;
 
-import java.util.Collection;
-import java.util.Collections;
-
 import org.mastodon.collection.RefCollections;
+import org.mastodon.collection.RefIntMap;
+import org.mastodon.collection.RefMaps;
 import org.mastodon.collection.RefSet;
 import org.mastodon.feature.FeatureModel;
 import org.mastodon.feature.FeatureProjection;
@@ -21,7 +20,10 @@ import org.mastodon.views.context.ContextListener;
 import org.mastodon.views.grapher.display.FeatureGraphConfig;
 import org.mastodon.views.grapher.display.FeatureSpecPair;
 
-public class DataLayout implements ContextListener< Spot >
+import gnu.trove.list.array.TIntArrayList;
+import gnu.trove.set.hash.TIntHashSet;
+
+public class DataLayoutMaker implements ContextListener< Spot >
 {
 
 	private FeatureProjection< Spot > ypVertex;
@@ -44,7 +46,7 @@ public class DataLayout implements ContextListener< Spot >
 
 	private final SelectionModel< Spot, Link > selection;
 
-	private Collection< Spot > vertices = Collections.emptyList();
+	private RefSet< Spot > vertices;
 
 	private String xlabel;
 
@@ -54,7 +56,7 @@ public class DataLayout implements ContextListener< Spot >
 
 	private final GraphColorGenerator< Spot, Link > graphColorGenerator;
 
-	public DataLayout(
+	public DataLayoutMaker(
 			final ModelGraph graph,
 			final SelectionModel< Spot, Link > selection,
 			final FeatureModel featureModel,
@@ -109,25 +111,68 @@ public class DataLayout implements ContextListener< Spot >
 	 * 
 	 * @return
 	 */
-	public float[] layout()
+	public DataLayout layout()
 	{
 		if ( vertices.isEmpty() )
-			return new float[] {};
+			return new DataLayout( new float[] {}, new int[] {} );
+
+		/*
+		 * Vertex pos.
+		 */
+
+		// Map of index in the pos array for each vertices.
+		// Will be used later to build the edge index array.
+		final RefIntMap< Spot > vPosMap = RefMaps.createRefIntMap( vertices, -1 );
 
 		final int nPoints = vertices.size();
-		final float[] out = new float[ 2 * nPoints ];
+		final float[] xyPos = new float[ 2 * nPoints ];
 		if ( ( xpVertex != null || xpEdge != null ) && ( ypVertex != null || ypEdge != null ) )
 		{
 			int i = 0;
 			for ( final Spot v : vertices )
 			{
+				vPosMap.put( v, i / 2 );
+
 				final float x = ( float ) getXFeatureValue( v );
 				final float y = ( float ) getYFeatureValue( v );
-				out[ i++ ] = x;
-				out[ i++ ] = y;
+				xyPos[ i++ ] = x;
+				xyPos[ i++ ] = y;
 			}
 		}
-		return out;
+
+		/*
+		 * Edge indices.
+		 */
+
+		final int[] edgeIndices;
+		if ( paintEdges )
+		{
+			final TIntHashSet visited = new TIntHashSet( vertices.size() );
+			final TIntArrayList indexList = new TIntArrayList( vertices.size() * 2 );
+			final Spot sref = vertices.createRef();
+			final Spot tref = vertices.createRef();
+			for ( final Spot v : vertices )
+			{
+				for ( final Link e : v.edges() )
+				{
+					final int id = e.getInternalPoolIndex();
+					if ( visited.contains( id ) )
+						continue;
+					visited.add( id );
+
+					indexList.add( vPosMap.get( e.getSource( sref ) ) );
+					indexList.add( vPosMap.get( e.getTarget( tref ) ) );
+				}
+			}
+			vertices.releaseRef( sref );
+			vertices.releaseRef( tref );
+			edgeIndices = indexList.toArray();
+		}
+		else
+		{
+			edgeIndices = new int[] {};
+		}
+		return new DataLayout( xyPos, edgeIndices );
 	}
 
 	/**
@@ -294,7 +339,7 @@ public class DataLayout implements ContextListener< Spot >
 		return ylabel;
 	}
 
-	private void setVertices( final Collection< Spot > vertices )
+	private void setVertices( final RefSet< Spot > vertices )
 	{
 		this.vertices = vertices;
 	}
@@ -369,5 +414,18 @@ public class DataLayout implements ContextListener< Spot >
 	public void contextChanged( final Context< Spot > context )
 	{
 		this.context = context;
+	}
+
+	public static final class DataLayout
+	{
+		public final float[] verticesPos;
+
+		public final int[] edgeIndices;
+
+		public DataLayout( final float[] verticesPos, final int[] edgeIndices )
+		{
+			this.verticesPos = verticesPos;
+			this.edgeIndices = edgeIndices;
+		}
 	}
 }

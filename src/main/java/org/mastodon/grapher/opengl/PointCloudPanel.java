@@ -74,9 +74,9 @@ public class PointCloudPanel extends JPanel implements Paintable, ContextListene
 
 	private float layoutMaxY;
 
-	private final DataLayout layout;
+	private final DataLayoutMaker layout;
 
-	public PointCloudPanel( final DataLayout layout )
+	public PointCloudPanel( final DataLayoutMaker layout )
 	{
 		super( new BorderLayout(), false );
 		this.layout = layout;
