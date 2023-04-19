@@ -102,7 +102,7 @@ public class PointCloudPanel extends JPanel implements Paintable, ContextListene
 		this.dataPointsOverlay = new DataPointsOverlay( layout, transformHandler );
 		dataPointsOverlay.getLayoutChangeListeners().add( this );
 		canvas.overlays().add( dataEdgesOverlay );
-//		canvas.overlays().add( dataPointsOverlay );
+		canvas.overlays().add( dataPointsOverlay );
 
 		// Bottom axis.
 		final JPanel xAxis = new MyXAxisPanel( canvas.t );

@@ -80,13 +80,11 @@ public class DataEdgesOverlay implements GLOverlayRenderer
 			// Update edge indices.
 			GL33.glBindBuffer( GL33.GL_ELEMENT_ARRAY_BUFFER, iboEdgeIndexHandle );
 			GL33.glBufferData( GL33.GL_ELEMENT_ARRAY_BUFFER, edgeIndexData, GL33.GL_STATIC_DRAW );
-			GL33.glVertexPointer( EDGE_SIZE, GL33.GL_UNSIGNED_INT, 0, 0 );
-			GL33.glBindBuffer( GL33.GL_ARRAY_BUFFER, 0 );
+			GL33.glBindBuffer( GL33.GL_ELEMENT_ARRAY_BUFFER, 0 );
 
 			// Update edge position.
 			GL33.glBindBuffer( GL33.GL_ARRAY_BUFFER, vboEdgePositionHandle );
 			GL33.glBufferData( GL33.GL_ARRAY_BUFFER, edgePosData, GL33.GL_STATIC_DRAW );
-			GL33.glVertexPointer( VERTEX_SIZE, GL33.GL_FLOAT, 0, 0 );
 			GL33.glBindBuffer( GL33.GL_ARRAY_BUFFER, 0 );
 		}
 		if ( updateColor )
@@ -114,13 +112,20 @@ public class DataEdgesOverlay implements GLOverlayRenderer
 		GL33.glEnableVertexAttribArray( 1 );
 		GL33.glVertexAttribPointer( 1, VERTEX_SIZE, GL33.GL_FLOAT, false, 0, 0 );
 
+		// Edge positions.
+		GL33.glBindBuffer( GL33.GL_ARRAY_BUFFER, vboEdgePositionHandle );
+		GL33.glVertexPointer( VERTEX_SIZE, GL33.GL_FLOAT, 0, 0 );
+		GL33.glBindBuffer( GL33.GL_ARRAY_BUFFER, 0 );
+
 		// Edge colors.
 		GL33.glBindBuffer( GL33.GL_ARRAY_BUFFER, vboEdgeColorHandle );
 		GL33.glColorPointer( COLOR_SIZE, GL33.GL_FLOAT, 0, 0 );
+		GL33.glBindBuffer( GL33.GL_ARRAY_BUFFER, 0 );
 
 		// Draw the line segments using the indices.
+		GL33.glBindBuffer( GL33.GL_ELEMENT_ARRAY_BUFFER, iboEdgeIndexHandle );
 		GL33.glDrawElements( GL33.GL_LINES, edgeIndexData.length, GL33.GL_UNSIGNED_INT, 0 );
-		GL33.glBindBuffer( GL33.GL_ARRAY_BUFFER, 0 );
+		GL33.glBindBuffer( GL33.GL_ELEMENT_ARRAY_BUFFER, 0 );
 
 		// Disable the position attribute.
 		GL33.glDisableVertexAttribArray( 1 );

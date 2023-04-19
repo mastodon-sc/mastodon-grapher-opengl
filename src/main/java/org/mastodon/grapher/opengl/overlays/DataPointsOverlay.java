@@ -128,12 +128,16 @@ public class DataPointsOverlay implements GLOverlayRenderer
 		 */
 
 		// Vertex colors.
+		GL33.glBindBuffer( GL33.GL_ARRAY_BUFFER, vboVertexPositionHandle );
+		GL33.glVertexPointer( VERTEX_SIZE, GL33.GL_FLOAT, 0, 0 );
+		GL33.glBindBuffer( GL33.GL_ARRAY_BUFFER, 0 );
+
 		GL33.glBindBuffer( GL33.GL_ARRAY_BUFFER, vboVertexColorHandle );
 		GL33.glColorPointer( COLOR_SIZE, GL33.GL_FLOAT, 0, 0 );
+		GL33.glBindBuffer( GL33.GL_ARRAY_BUFFER, 0 );
 
 		// Draw vertices as points.
 		GL33.glDrawArrays( GL33.GL_POINTS, 0, vertexPosData.length / VERTEX_SIZE );
-		GL33.glBindBuffer( GL33.GL_ARRAY_BUFFER, 0 );
 
 		/*
 		 * Disable.
