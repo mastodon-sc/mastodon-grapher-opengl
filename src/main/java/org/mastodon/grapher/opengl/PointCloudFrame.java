@@ -41,7 +41,7 @@ public class PointCloudFrame extends ViewFrame
 			final FeatureModel featureModel,
 			final int nSources,
 			final HighlightModel< Spot, Link > highlight,
-			final FocusModel< Spot, Link > focus,
+			final FocusModel< Spot > focus,
 			final SelectionModel< Spot, Link > selection,
 			final NavigationHandler< Spot, Link > navigation,
 			final UndoPointMarker undoPointMarker,

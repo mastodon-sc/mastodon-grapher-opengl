@@ -3,8 +3,9 @@ package org.mastodon.grapher.opengl;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import org.mastodon.ui.keymap.CommandDescriptionProvider;
-import org.mastodon.ui.keymap.CommandDescriptions;
+import org.mastodon.mamut.KeyConfigScopes;
+import org.scijava.ui.behaviour.io.gui.CommandDescriptionProvider;
+import org.scijava.ui.behaviour.io.gui.CommandDescriptions;
 import org.mastodon.ui.keymap.KeyConfigContexts;
 import org.mastodon.views.grapher.datagraph.ScreenTransform;
 import org.mastodon.views.grapher.display.ConstrainScreenTransform;
@@ -54,7 +55,7 @@ public class InertialScreenTransformEventHandler
 	{
 		public Descriptions()
 		{
-			super( KeyConfigContexts.GRAPHER );
+			super( KeyConfigScopes.MAMUT, KeyConfigContexts.GRAPHER );
 		}
 
 		@Override

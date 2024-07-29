@@ -36,6 +36,8 @@
 		<license.organizationName>Mastodon authors</license.organizationName>
 		<license.copyrightOwners>Tobias Pietzsch, Jean-Yves Tinevez</license.copyrightOwners>
 
+		<mastodon.version>1.0.0-beta-31-SNAPSHOT</mastodon.version>
+
 		<lwjgl.version>3.3.1</lwjgl.version>
 		<lwjgl3-awt.version>0.1.8</lwjgl3-awt.version>
 		<lwjgl.natives>natives-macos</lwjgl.natives>
@@ -54,6 +56,15 @@
 	</dependencyManagement>
 
 	<dependencies>
+
+		<!-- Mastodon Core -->
+		<dependency>
+			<groupId>org.mastodon</groupId>
+			<artifactId>mastodon</artifactId>
+			<version>${mastodon.version}</version>
+		</dependency>
+
+		<!-- LWJGL (lightweight java gaming library) for fast rendering of many points -->
 		<dependency>
 			<groupId>org.lwjgl</groupId>
 			<artifactId>lwjgl</artifactId>
@@ -62,6 +73,7 @@
 			<groupId>org.lwjgl</groupId>
 			<artifactId>lwjgl-opengl</artifactId>
 		</dependency>
+		<!-- LWJGL natives -->
 		<dependency>
 			<groupId>org.lwjgl</groupId>
 			<artifactId>lwjgl</artifactId>
@@ -77,16 +89,13 @@
 			<artifactId>lwjgl-opengl</artifactId>
 			<classifier>${lwjgl.natives}</classifier>
 		</dependency>
+		<!-- LWJGL AWT -->
 		<dependency>
 			<groupId>org.lwjglx</groupId>
 			<artifactId>lwjgl3-awt</artifactId>
 			<version>${lwjgl3-awt.version}</version>
 		</dependency>
-		<dependency>
-			<groupId>org.mastodon</groupId>
-			<artifactId>mastodon</artifactId>
-			<version>1.0.0-beta-27-SNAPSHOT</version>
-		</dependency>
+
 	</dependencies>
 
 	<developers>

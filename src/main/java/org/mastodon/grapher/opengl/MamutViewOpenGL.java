@@ -6,9 +6,6 @@ import static org.mastodon.mamut.MamutMenuBuilder.colorMenu;
 import static org.mastodon.mamut.MamutMenuBuilder.editMenu;
 import static org.mastodon.mamut.MamutMenuBuilder.tagSetMenu;
 import static org.mastodon.mamut.MamutMenuBuilder.viewMenu;
-import static org.mastodon.mamut.MamutViewStateSerialization.FEATURE_COLOR_MODE_KEY;
-import static org.mastodon.mamut.MamutViewStateSerialization.NO_COLORING_KEY;
-import static org.mastodon.mamut.MamutViewStateSerialization.TAG_SET_KEY;
 
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
@@ -26,9 +23,9 @@ import org.mastodon.app.ui.MastodonFrameViewActions;
 import org.mastodon.app.ui.ViewMenu;
 import org.mastodon.app.ui.ViewMenuBuilder.JMenuHandle;
 import org.mastodon.mamut.MainWindow;
-import org.mastodon.mamut.MamutAppModel;
+import org.mastodon.mamut.ProjectModel;
 import org.mastodon.mamut.MamutMenuBuilder;
-import org.mastodon.mamut.MamutView;
+import org.mastodon.mamut.views.MamutView;
 import org.mastodon.mamut.UndoActions;
 import org.mastodon.mamut.feature.SpotPositionFeature;
 import org.mastodon.mamut.model.Link;
@@ -47,8 +44,9 @@ import org.mastodon.views.grapher.display.FeatureGraphConfig;
 import org.mastodon.views.grapher.display.FeatureGraphConfig.GraphDataItemsSource;
 import org.mastodon.views.grapher.display.FeatureSpecPair;
 import org.mastodon.views.grapher.display.style.DataDisplayStyle;
-import org.mastodon.views.trackscheme.display.ColorBarOverlay;
-import org.mastodon.views.trackscheme.display.ColorBarOverlay.Position;
+import org.mastodon.ui.coloring.ColorBarOverlay;
+import org.mastodon.ui.coloring.ColorBarOverlay.Position;
+import org.mastodon.views.grapher.display.style.DataDisplayStyleManager;
 import org.scijava.ui.behaviour.KeyPressedManager;
 
 public class MamutViewOpenGL extends MamutView< ViewGraph< Spot, Link, Spot, Link >, Spot, Link >
@@ -62,12 +60,12 @@ public class MamutViewOpenGL extends MamutView< ViewGraph< Spot, Link, Spot, Lin
 
 	private final ColorBarOverlay colorbarOverlay;
 
-	public MamutViewOpenGL( final MamutAppModel appModel )
+	public MamutViewOpenGL( final ProjectModel appModel )
 	{
 		this(appModel, new HashMap<>());
 	}
 	
-	public MamutViewOpenGL( final MamutAppModel appModel, final Map< String, Object > guiState )
+	public MamutViewOpenGL( final ProjectModel appModel, final Map< String, Object > guiState )
 	{
 		super( appModel,
 				createViewGraph( appModel ),
@@ -79,7 +77,8 @@ public class MamutViewOpenGL extends MamutView< ViewGraph< Spot, Link, Spot, Lin
 		final AutoNavigateFocusModel< Spot, Link > navigateFocusModel =
 				new AutoNavigateFocusModel<>( focusModel, navigationHandler );
 
-		final DataDisplayStyle forwardDefaultStyle = appModel.getDataDisplayStyleManager().getForwardDefaultStyle();
+		final DataDisplayStyleManager dataDisplayStyleManager = appModel.getWindowManager().getManager( DataDisplayStyleManager.class );
+		final DataDisplayStyle forwardDefaultStyle = dataDisplayStyleManager.getForwardDefaultStyle();
 		coloringAdapter = new GraphColorGeneratorAdapter<>( viewGraph.getVertexMap(), viewGraph.getEdgeMap() );
 		final DataDisplayOptions options = DataDisplayOptions.options()
 				.shareKeyPressedEvents( keyPressedManager )
@@ -228,7 +227,7 @@ public class MamutViewOpenGL extends MamutView< ViewGraph< Spot, Link, Spot, Lin
 		getFrame().repaint();
 	}
 
-	private static ViewGraph< Spot, Link, Spot, Link > createViewGraph( final MamutAppModel appModel )
+	private static ViewGraph< Spot, Link, Spot, Link > createViewGraph( final ProjectModel appModel )
 	{
 		return IdentityViewGraph.wrap( appModel.getModel().getGraph(), appModel.getModel().getGraphIdBimap() );
 	}
