@@ -1,7 +1,7 @@
 package org.mastodon.grapher.opengl;
 
-import static org.mastodon.grapher.opengl.overlays.DataPointsOverlay.COLOR_SIZE;
-import static org.mastodon.grapher.opengl.overlays.DataPointsOverlay.VERTEX_SIZE;
+import static org.mastodon.grapher.opengl.overlays.DataPointsOverlay.COLOR_NUM_CHANNELS;
+import static org.mastodon.grapher.opengl.overlays.DataPointsOverlay.VERTEX_NUM_DIMENSIONS;
 
 import java.awt.Color;
 import java.util.ArrayList;
@@ -143,7 +143,7 @@ public class DataLayoutMaker implements ContextListener< Spot >
 		 * Vertex pos.
 		 */
 
-		final float[] xyPos = new float[ VERTEX_SIZE * vertices.size() ];
+		final float[] xyPos = new float[ VERTEX_NUM_DIMENSIONS * vertices.size() ];
 		if ( ( xpVertex != null || xpEdge != null ) && ( ypVertex != null || ypEdge != null ) )
 		{
 			int i = 0;
@@ -169,7 +169,7 @@ public class DataLayoutMaker implements ContextListener< Spot >
 		if ( paintEdges )
 		{
 			edgeIndices = new int[ edges.size() * 2 ];
-			edgePositions = new float[ edges.size() * 2 * VERTEX_SIZE ];
+			edgePositions = new float[ edges.size() * 2 * VERTEX_NUM_DIMENSIONS ];
 
 			final Spot sref = vertices.createRef();
 			final Spot tref = vertices.createRef();
@@ -248,7 +248,7 @@ public class DataLayoutMaker implements ContextListener< Spot >
 		 */
 
 		final int n = vertices.size();
-		final float[] vertexColors = new float[ COLOR_SIZE * n ];
+		final float[] vertexColors = new float[ COLOR_NUM_CHANNELS * n ];
 		final float[] tmp = new float[ 4 ];
 		int i = 0;
 		for ( final Spot spot : vertices )
@@ -281,7 +281,7 @@ public class DataLayoutMaker implements ContextListener< Spot >
 		int j = 0;
 		if ( paintEdges )
 		{
-			edgeColors = new float[ edges.size() * COLOR_SIZE * 2 ];
+			edgeColors = new float[ edges.size() * COLOR_NUM_CHANNELS * 2 ];
 			final Spot sref = vertices.createRef();
 			final Spot tref = vertices.createRef();
 			for ( final Link e : edges )
@@ -442,7 +442,7 @@ public class DataLayoutMaker implements ContextListener< Spot >
 	/**
 	 * Returns the set of data vertices that are painted according to this
 	 * layout instance, within the specified <b>screen coordinates</b>.
-	 * 
+	 *
 	 * @param x1
 	 *            x min in screen coordinates.
 	 * @param y1

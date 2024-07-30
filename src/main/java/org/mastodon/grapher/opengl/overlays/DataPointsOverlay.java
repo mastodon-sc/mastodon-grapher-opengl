@@ -11,9 +11,9 @@ import org.scijava.listeners.Listeners;
 public class DataPointsOverlay implements GLOverlayRenderer
 {
 
-	public static final int VERTEX_SIZE = 2; // X, Y
+	public static final int VERTEX_NUM_DIMENSIONS = 2; // X, Y
 
-	public static final int COLOR_SIZE = 4; // R, G, B, alpha
+	public static final int COLOR_NUM_CHANNELS = 4; // R, G, B, alpha
 
 	public static final float DEFAULT_POINT_SIZE = 5.1f;
 
@@ -100,7 +100,7 @@ public class DataPointsOverlay implements GLOverlayRenderer
 			// Update vertex XY.
 			GL33.glBindBuffer( GL33.GL_ARRAY_BUFFER, vboVertexPositionHandle );
 			GL33.glBufferData( GL33.GL_ARRAY_BUFFER, vertexPosData, GL33.GL_STATIC_DRAW );
-			GL33.glVertexPointer( VERTEX_SIZE, GL33.GL_FLOAT, 0, 0 );
+			GL33.glVertexPointer( VERTEX_NUM_DIMENSIONS, GL33.GL_FLOAT, 0, 0 );
 			GL33.glBindBuffer( GL33.GL_ARRAY_BUFFER, 0 );
 		}
 		if ( updateColor )
@@ -126,15 +126,15 @@ public class DataPointsOverlay implements GLOverlayRenderer
 
 		// Vertex colors.
 		GL33.glBindBuffer( GL33.GL_ARRAY_BUFFER, vboVertexPositionHandle );
-		GL33.glVertexPointer( VERTEX_SIZE, GL33.GL_FLOAT, 0, 0 );
+		GL33.glVertexPointer( VERTEX_NUM_DIMENSIONS, GL33.GL_FLOAT, 0, 0 );
 		GL33.glBindBuffer( GL33.GL_ARRAY_BUFFER, 0 );
 
 		GL33.glBindBuffer( GL33.GL_ARRAY_BUFFER, vboVertexColorHandle );
-		GL33.glColorPointer( COLOR_SIZE, GL33.GL_FLOAT, 0, 0 );
+		GL33.glColorPointer( COLOR_NUM_CHANNELS, GL33.GL_FLOAT, 0, 0 );
 		GL33.glBindBuffer( GL33.GL_ARRAY_BUFFER, 0 );
 
 		// Draw vertices as points.
-		GL33.glDrawArrays( GL33.GL_POINTS, 0, vertexPosData.length / VERTEX_SIZE );
+		GL33.glDrawArrays( GL33.GL_POINTS, 0, vertexPosData.length / VERTEX_NUM_DIMENSIONS );
 
 		/*
 		 * Disable.
