@@ -1,6 +1,21 @@
 package org.mastodon.grapher.opengl.overlays;
 
-import org.lwjgl.opengl.GL33;
+import static org.lwjgl.opengl.GL11.GL_COLOR_ARRAY;
+import static org.lwjgl.opengl.GL11.GL_FLOAT;
+import static org.lwjgl.opengl.GL11.GL_POINTS;
+import static org.lwjgl.opengl.GL11.GL_VERTEX_ARRAY;
+import static org.lwjgl.opengl.GL11.glColorPointer;
+import static org.lwjgl.opengl.GL11.glDisableClientState;
+import static org.lwjgl.opengl.GL11.glDrawArrays;
+import static org.lwjgl.opengl.GL11.glEnableClientState;
+import static org.lwjgl.opengl.GL11.glPointSize;
+import static org.lwjgl.opengl.GL11.glVertexPointer;
+import static org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER;
+import static org.lwjgl.opengl.GL15.GL_STATIC_DRAW;
+import static org.lwjgl.opengl.GL15.glBindBuffer;
+import static org.lwjgl.opengl.GL15.glBufferData;
+import static org.lwjgl.opengl.GL15.glGenBuffers;
+
 import org.mastodon.grapher.opengl.DataLayoutMaker;
 import org.mastodon.grapher.opengl.DataLayoutMaker.DataColor;
 import org.mastodon.grapher.opengl.DataLayoutMaker.DataLayout;
@@ -84,64 +99,64 @@ public class DataPointsOverlay implements GLOverlayRenderer
 	public void init()
 	{
 		// New handles.
-		this.vboVertexPositionHandle = GL33.glGenBuffers();
-		this.vboVertexColorHandle = GL33.glGenBuffers();
+		this.vboVertexPositionHandle = glGenBuffers();
+		this.vboVertexColorHandle = glGenBuffers();
 	}
 
 	@Override
 	public void paint()
 	{
-		GL33.glPointSize( DEFAULT_POINT_SIZE );
+		glPointSize( DEFAULT_POINT_SIZE );
 
 		if ( updateXY )
 		{
 			updateXY = false;
 
 			// Update vertex XY.
-			GL33.glBindBuffer( GL33.GL_ARRAY_BUFFER, vboVertexPositionHandle );
-			GL33.glBufferData( GL33.GL_ARRAY_BUFFER, vertexPosData, GL33.GL_STATIC_DRAW );
-			GL33.glVertexPointer( VERTEX_NUM_DIMENSIONS, GL33.GL_FLOAT, 0, 0 );
-			GL33.glBindBuffer( GL33.GL_ARRAY_BUFFER, 0 );
+			glBindBuffer( GL_ARRAY_BUFFER, vboVertexPositionHandle );
+			glBufferData( GL_ARRAY_BUFFER, vertexPosData, GL_STATIC_DRAW );
+			glVertexPointer( VERTEX_NUM_DIMENSIONS, GL_FLOAT, 0, 0 );
+			glBindBuffer( GL_ARRAY_BUFFER, 0 );
 		}
 		if ( updateColor )
 		{
 			updateColor = false;
 
 			// Vertex colors.
-			GL33.glBindBuffer( GL33.GL_ARRAY_BUFFER, vboVertexColorHandle );
-			GL33.glBufferData( GL33.GL_ARRAY_BUFFER, vertexColorData, GL33.GL_STATIC_DRAW );
-			GL33.glBindBuffer( GL33.GL_ARRAY_BUFFER, 0 );
+			glBindBuffer( GL_ARRAY_BUFFER, vboVertexColorHandle );
+			glBufferData( GL_ARRAY_BUFFER, vertexColorData, GL_STATIC_DRAW );
+			glBindBuffer( GL_ARRAY_BUFFER, 0 );
 		}
 
 		/*
 		 * Enable.
 		 */
 
-		GL33.glEnableClientState( GL33.GL_VERTEX_ARRAY );
-		GL33.glEnableClientState( GL33.GL_COLOR_ARRAY );
+		glEnableClientState( GL_VERTEX_ARRAY );
+		glEnableClientState( GL_COLOR_ARRAY );
 
 		/*
 		 * Draw vertices.
 		 */
 
 		// Vertex colors.
-		GL33.glBindBuffer( GL33.GL_ARRAY_BUFFER, vboVertexPositionHandle );
-		GL33.glVertexPointer( VERTEX_NUM_DIMENSIONS, GL33.GL_FLOAT, 0, 0 );
-		GL33.glBindBuffer( GL33.GL_ARRAY_BUFFER, 0 );
+		glBindBuffer( GL_ARRAY_BUFFER, vboVertexPositionHandle );
+		glVertexPointer( VERTEX_NUM_DIMENSIONS, GL_FLOAT, 0, 0 );
+		glBindBuffer( GL_ARRAY_BUFFER, 0 );
 
-		GL33.glBindBuffer( GL33.GL_ARRAY_BUFFER, vboVertexColorHandle );
-		GL33.glColorPointer( COLOR_NUM_CHANNELS, GL33.GL_FLOAT, 0, 0 );
-		GL33.glBindBuffer( GL33.GL_ARRAY_BUFFER, 0 );
+		glBindBuffer( GL_ARRAY_BUFFER, vboVertexColorHandle );
+		glColorPointer( COLOR_NUM_CHANNELS, GL_FLOAT, 0, 0 );
+		glBindBuffer( GL_ARRAY_BUFFER, 0 );
 
 		// Draw vertices as points.
-		GL33.glDrawArrays( GL33.GL_POINTS, 0, vertexPosData.length / VERTEX_NUM_DIMENSIONS );
+		glDrawArrays( GL_POINTS, 0, vertexPosData.length / VERTEX_NUM_DIMENSIONS );
 
 		/*
 		 * Disable.
 		 */
 
-		GL33.glDisableClientState( GL33.GL_COLOR_ARRAY );
-		GL33.glDisableClientState( GL33.GL_VERTEX_ARRAY );
+		glDisableClientState( GL_COLOR_ARRAY );
+		glDisableClientState( GL_VERTEX_ARRAY );
 	}
 
 	public void draw( final DataLayout l )
