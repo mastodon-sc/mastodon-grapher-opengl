@@ -66,9 +66,9 @@ public class PointCloudCanvas extends AWTGLCanvas
 		{
 			final int w = getWidth();
 			final int h = getHeight();
-			final java.awt.geom.AffineTransform t = PointCloudCanvas.this.getGraphicsConfiguration().getDefaultTransform();
-			final float sx = ( float ) t.getScaleX();
-			final float sy = ( float ) t.getScaleY();
+			final java.awt.geom.AffineTransform transform = PointCloudCanvas.this.getGraphicsConfiguration().getDefaultTransform();
+			final float sx = ( float ) transform.getScaleX();
+			final float sy = ( float ) transform.getScaleY();
 			framebufferWidth = ( int ) ( w * sx );
 			framebufferHeight = ( int ) ( h * sy );
 			overlayRenderers.list.forEach( r -> r.setCanvasSize( w, h ) );
