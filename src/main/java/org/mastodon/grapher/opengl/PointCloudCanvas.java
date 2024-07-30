@@ -87,9 +87,7 @@ public class PointCloudCanvas extends AWTGLCanvas
 	public PointCloudCanvas()
 	{
 		super();
-		overlayRenderers = new Listeners.SynchronizedList<>( r -> {
-			r.setCanvasSize( getWidth(), getHeight() );
-		} );
+		overlayRenderers = new Listeners.SynchronizedList<>( r -> r.setCanvasSize( getWidth(), getHeight() ) );
 
 		this.t = new ScreenTransform( -1, 1, -1, 1, 400, 400 );
 		this.addComponentListener( listener );
@@ -196,7 +194,7 @@ public class PointCloudCanvas extends AWTGLCanvas
 		glEnable( GL_BLEND );
 		glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 
-		overlayRenderers.list.forEach( r -> r.init() );
+		overlayRenderers.list.forEach( GLOverlayRenderer::init );
 	}
 
 	@Override
@@ -214,7 +212,7 @@ public class PointCloudCanvas extends AWTGLCanvas
 		glViewport( 0, 0, getFramebufferWidth(), getFramebufferHeight() );
 		glMatrixMode( GL_MODELVIEW );
 
-		overlayRenderers.list.forEach( r -> r.paint() );
+		overlayRenderers.list.forEach( GLOverlayRenderer::paint );
 
 		swapBuffers();
 	}
