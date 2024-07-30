@@ -105,7 +105,7 @@ public class PointCloudCanvas extends AWTGLCanvas
 
 	/**
 	 * OverlayRenderers can be added/removed here.
-	 * {@link GLOverlayRenderer#drawOverlays} is invoked for each renderer (in
+	 * {@link GLOverlayRenderer#paint()} is invoked for each renderer (in
 	 * the order they were added).
 	 */
 	public Listeners< GLOverlayRenderer > overlays()
