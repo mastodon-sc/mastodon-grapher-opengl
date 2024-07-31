@@ -111,8 +111,8 @@ public class PointCloudPanel extends JPanel implements Paintable, ContextListene
 		canvas.overlays().add( highlightOverlay );
 
 		// Bottom axis.
-		final JPanel xAxis = new MyXAxisPanel( canvas.t );
-		final JPanel yAxis = new MyYAxisPanel( canvas.t );
+		final JPanel xAxis = new MyXAxisPanel( canvas.transform );
+		final JPanel yAxis = new MyYAxisPanel( canvas.transform );
 
 		// Add main canvas.
 		final JPanel mainPanel = new JPanel();
@@ -174,15 +174,15 @@ public class PointCloudPanel extends JPanel implements Paintable, ContextListene
 
 		// adjust scrollbars sizes
 		xScrollScale = 10000.0 / ( layoutMaxX - layoutMinX + 2 );
-		final int xval = ( int ) ( xScrollScale * canvas.t.getMinX() );
-		final int xext = ( int ) ( xScrollScale * ( canvas.t.getMaxX() - canvas.t.getMinX() ) );
+		final int xval = ( int ) ( xScrollScale * canvas.transform.getMinX() );
+		final int xext = ( int ) ( xScrollScale * ( canvas.transform.getMaxX() - canvas.transform.getMinX() ) );
 		final int xmin = ( int ) ( xScrollScale * layoutMinX );
 		final int xmax = ( int ) ( xScrollScale * layoutMaxX );
 		yScrollScale = 10000.0 / ( layoutMaxY - layoutMinY + 2 );
-		final int yext = ( int ) ( yScrollScale * ( canvas.t.getMaxY() - canvas.t.getMinY() ) );
+		final int yext = ( int ) ( yScrollScale * ( canvas.transform.getMaxY() - canvas.transform.getMinY() ) );
 		final int ymin = ( int ) ( yScrollScale * layoutMinY );
 		final int ymax = ( int ) ( yScrollScale * layoutMaxY );
-		final int yval = ( int ) ( yScrollScale * ( layoutMinY + layoutMaxY - canvas.t.getMaxY() ) );
+		final int yval = ( int ) ( yScrollScale * ( layoutMinY + layoutMaxY - canvas.transform.getMaxY() ) );
 
 		ignoreScrollBarChanges = true;
 		xScrollBar.setValues( xval, xext, xmin, xmax );
