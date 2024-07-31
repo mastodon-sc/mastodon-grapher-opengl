@@ -49,9 +49,9 @@ public class PointCloudCanvas extends AWTGLCanvas
 	// TODO move into a style.
 	public static final Color BACKGROUND_COLOR = new Color( 204, 204, 204 );
 
-	private int framebufferWidth;
+	private int frameBufferWidth;
 
-	private int framebufferHeight;
+	private int frameBufferHeight;
 
 	/**
 	 * Mouse/Keyboard handler that manipulates the view transformation.
@@ -69,11 +69,11 @@ public class PointCloudCanvas extends AWTGLCanvas
 			final java.awt.geom.AffineTransform transform = PointCloudCanvas.this.getGraphicsConfiguration().getDefaultTransform();
 			final float sx = ( float ) transform.getScaleX();
 			final float sy = ( float ) transform.getScaleY();
-			framebufferWidth = ( int ) ( w * sx );
-			framebufferHeight = ( int ) ( h * sy );
+			frameBufferWidth = ( int ) ( w * sx );
+			frameBufferHeight = ( int ) ( h * sy );
 			overlayRenderers.list.forEach( r -> r.setCanvasSize( w, h ) );
 			if ( handler != null )
-				handler.setCanvasSize( framebufferWidth, framebufferHeight, true );
+				handler.setCanvasSize( frameBufferWidth, frameBufferHeight, true );
 		}
 	};
 
@@ -209,7 +209,7 @@ public class PointCloudCanvas extends AWTGLCanvas
 		glMatrixMode( GL_PROJECTION );
 		glLoadIdentity();
 		glOrtho( transform.getMinX(), transform.getMaxX(), transform.getMinY(), transform.getMaxY(), -1, 1 );
-		glViewport( 0, 0, getFramebufferWidth(), getFramebufferHeight() );
+		glViewport( 0, 0, getFrameBufferWidth(), getFrameBufferHeight() );
 		glMatrixMode( GL_MODELVIEW );
 
 		overlayRenderers.list.forEach( GLOverlayRenderer::paint );
@@ -217,14 +217,14 @@ public class PointCloudCanvas extends AWTGLCanvas
 		swapBuffers();
 	}
 
-	public int getFramebufferWidth()
+	public int getFrameBufferWidth()
 	{
-		return framebufferWidth;
+		return frameBufferWidth;
 	}
 
-	public int getFramebufferHeight()
+	public int getFrameBufferHeight()
 	{
-		return framebufferHeight;
+		return frameBufferHeight;
 	}
 
 	public void setTransform( final ScreenTransform transform )
