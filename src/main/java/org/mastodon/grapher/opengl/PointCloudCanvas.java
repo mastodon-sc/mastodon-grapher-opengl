@@ -82,14 +82,14 @@ public class PointCloudCanvas extends AWTGLCanvas
 	/**
 	 * Used to read from the screen transform state.
 	 */
-	final ScreenTransform t;
+	final ScreenTransform transform;
 
 	public PointCloudCanvas()
 	{
 		super();
 		overlayRenderers = new Listeners.SynchronizedList<>( r -> r.setCanvasSize( getWidth(), getHeight() ) );
 
-		this.t = new ScreenTransform( -1, 1, -1, 1, 400, 400 );
+		this.transform = new ScreenTransform( -1, 1, -1, 1, 400, 400 );
 		this.addComponentListener( listener );
 		this.addMouseListener( new MouseAdapter()
 		{
@@ -208,7 +208,7 @@ public class PointCloudCanvas extends AWTGLCanvas
 
 		glMatrixMode( GL_PROJECTION );
 		glLoadIdentity();
-		glOrtho( t.getMinX(), t.getMaxX(), t.getMinY(), t.getMaxY(), -1, 1 );
+		glOrtho( transform.getMinX(), transform.getMaxX(), transform.getMinY(), transform.getMaxY(), -1, 1 );
 		glViewport( 0, 0, getFramebufferWidth(), getFramebufferHeight() );
 		glMatrixMode( GL_MODELVIEW );
 
@@ -229,6 +229,6 @@ public class PointCloudCanvas extends AWTGLCanvas
 
 	public void setTransform( final ScreenTransform transform )
 	{
-		t.set( transform );
+		this.transform.set( transform );
 	}
 }
