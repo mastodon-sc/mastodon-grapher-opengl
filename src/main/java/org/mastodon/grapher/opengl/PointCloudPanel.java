@@ -207,6 +207,11 @@ public class PointCloudPanel extends JPanel implements Paintable, ContextListene
 		return transformHandler;
 	}
 
+	public ScreenTransformState getScreenTransform()
+	{
+		return screenTransform;
+	}
+
 	public void stop()
 	{
 		System.out.println( "Window closing." ); // DEBUG
