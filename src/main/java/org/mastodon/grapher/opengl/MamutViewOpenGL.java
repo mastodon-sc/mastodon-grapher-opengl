@@ -23,9 +23,8 @@ import org.mastodon.app.ui.MastodonFrameViewActions;
 import org.mastodon.app.ui.ViewMenu;
 import org.mastodon.app.ui.ViewMenuBuilder.JMenuHandle;
 import org.mastodon.mamut.MainWindow;
-import org.mastodon.mamut.ProjectModel;
 import org.mastodon.mamut.MamutMenuBuilder;
-import org.mastodon.mamut.views.MamutView;
+import org.mastodon.mamut.ProjectModel;
 import org.mastodon.mamut.UndoActions;
 import org.mastodon.mamut.feature.SpotPositionFeature;
 import org.mastodon.mamut.model.Link;
@@ -33,9 +32,12 @@ import org.mastodon.mamut.model.Model;
 import org.mastodon.mamut.model.Spot;
 import org.mastodon.mamut.model.branch.BranchLink;
 import org.mastodon.mamut.model.branch.BranchSpot;
+import org.mastodon.mamut.views.MamutView;
 import org.mastodon.model.AutoNavigateFocusModel;
 import org.mastodon.model.tag.TagSetStructure.TagSet;
 import org.mastodon.ui.SelectionActions;
+import org.mastodon.ui.coloring.ColorBarOverlay;
+import org.mastodon.ui.coloring.ColorBarOverlay.Position;
 import org.mastodon.ui.coloring.ColoringModelMain;
 import org.mastodon.ui.coloring.GraphColorGeneratorAdapter;
 import org.mastodon.ui.coloring.feature.FeatureColorMode;
@@ -44,8 +46,6 @@ import org.mastodon.views.grapher.display.FeatureGraphConfig;
 import org.mastodon.views.grapher.display.FeatureGraphConfig.GraphDataItemsSource;
 import org.mastodon.views.grapher.display.FeatureSpecPair;
 import org.mastodon.views.grapher.display.style.DataDisplayStyle;
-import org.mastodon.ui.coloring.ColorBarOverlay;
-import org.mastodon.ui.coloring.ColorBarOverlay.Position;
 import org.mastodon.views.grapher.display.style.DataDisplayStyleManager;
 import org.scijava.ui.behaviour.KeyPressedManager;
 
@@ -219,6 +219,12 @@ public class MamutViewOpenGL extends MamutView< ViewGraph< Spot, Link, Spot, Lin
 
 		frame.setSize( 800, 550 );
 		frame.setVisible( true );
+	}
+
+	@Override
+	public PointCloudFrame getFrame()
+	{
+		return ( PointCloudFrame ) frame;
 	}
 
 	private void remapColor()
