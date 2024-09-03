@@ -3,6 +3,7 @@ package org.mastodon.grapher.opengl;
 import static org.mastodon.grapher.opengl.overlays.DataPointsOverlay.COLOR_SIZE;
 import static org.mastodon.grapher.opengl.overlays.DataPointsOverlay.VERTEX_SIZE;
 
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.ToDoubleFunction;
@@ -25,6 +26,7 @@ import org.mastodon.views.context.Context;
 import org.mastodon.views.context.ContextListener;
 import org.mastodon.views.grapher.display.FeatureGraphConfig;
 import org.mastodon.views.grapher.display.FeatureSpecPair;
+import org.mastodon.views.grapher.display.style.DataDisplayStyle;
 
 import net.imglib2.algorithm.kdtree.ConvexPolytope;
 import net.imglib2.algorithm.kdtree.HyperPlane;
@@ -66,16 +68,19 @@ public class DataLayoutMaker implements ContextListener< Spot >
 
 	private KdTreeWrapper< Spot > kdtree;
 
+	private final DataDisplayStyle style;
+
 	public DataLayoutMaker(
 			final ModelGraph graph,
 			final SelectionModel< Spot, Link > selection,
 			final FeatureModel featureModel,
-			final GraphColorGenerator< Spot, Link > graphColorGenerator )
+			final DataDisplayOptions options )
 	{
 		this.graph = graph;
 		this.selection = selection;
 		this.featureModel = featureModel;
-		this.graphColorGenerator = graphColorGenerator;
+		this.graphColorGenerator = options.values.getGraphColorGenerator();
+		style = options.values.getStyle();
 	}
 
 	private void setXFeatureVertex( final FeatureProjection< Spot > xproj )
@@ -205,6 +210,18 @@ public class DataLayoutMaker implements ContextListener< Spot >
 		 * Vertex colors.
 		 */
 
+		final Color vColor = style.getSimplifiedVertexFillColor();
+		final int vRed = vColor.getRed();
+		final int vGreen = vColor.getGreen();
+		final int vBlue = vColor.getBlue();
+		final int vAlpha = vColor.getAlpha();
+
+		final Color svColor = style.getSelectedSimplifiedVertexFillColor();
+		final int svRed = svColor.getRed();
+		final int svGreen = svColor.getGreen();
+		final int svBlue = svColor.getBlue();
+		final int svAlpha = svColor.getAlpha();
+
 		final int n = vertices.size();
 		final float[] vertexColors = new float[ COLOR_SIZE * n ];
 		int i = 0;
@@ -214,24 +231,32 @@ public class DataLayoutMaker implements ContextListener< Spot >
 			final int r;
 			final int g;
 			final int b;
-			final int c = graphColorGenerator.color( spot );
-			if ( c == 0 )
+			if ( selection.isSelected( spot ) )
 			{
-				// Default cColor from the style. TODO
-				a = 255;
-				r = 0;
-				g = 0;
-				b = 0;
+				r = svRed;
+				g = svGreen;
+				b = svBlue;
+				a = svAlpha;
 			}
 			else
 			{
-				// Color from the colormap.
-				a = ( c >> 24 ) & 0xFF;
-				r = ( c >> 16 ) & 0xFF;
-				g = ( c >> 8 ) & 0xFF;
-				b = c & 255;
+				final int c = graphColorGenerator.color( spot );
+				if ( c == 0 )
+				{
+					a = vAlpha;
+					r = vRed;
+					g = vGreen;
+					b = vBlue;
+				}
+				else
+				{
+					// Color from the colormap.
+					a = ( c >> 24 ) & 0xFF;
+					r = ( c >> 16 ) & 0xFF;
+					g = ( c >> 8 ) & 0xFF;
+					b = c & 255;
+				}
 			}
-
 			// RGBA
 			vertexColors[ i++ ] = ( r / 255f );
 			vertexColors[ i++ ] = ( g / 255f );
@@ -242,6 +267,18 @@ public class DataLayoutMaker implements ContextListener< Spot >
 		/*
 		 * Edge colors.
 		 */
+
+		final Color eColor = style.getEdgeColor();
+		final int eRed = eColor.getRed();
+		final int eGreen = eColor.getGreen();
+		final int eBlue = eColor.getBlue();
+		final int eAlpha = eColor.getAlpha();
+
+		final Color seColor = style.getSelectedEdgeColor();
+		final int seRed = seColor.getRed();
+		final int seGreen = seColor.getGreen();
+		final int seBlue = seColor.getBlue();
+		final int seAlpha = seColor.getAlpha();
 
 		final float[] edgeColors;
 		int j = 0;
@@ -254,26 +291,37 @@ public class DataLayoutMaker implements ContextListener< Spot >
 			{
 				e.getSource( sref );
 				e.getTarget( tref );
-				final int c = graphColorGenerator.color( e, sref, tref );
+
 				final int a;
 				final int r;
 				final int g;
 				final int b;
-				if ( c == 0 )
+				if ( selection.isSelected( e ) )
 				{
-					// Default cColor from the style. TODO
-					a = 255;
-					r = 0;
-					g = 0;
-					b = 0;
+					a = seAlpha;
+					r = seRed;
+					g = seGreen;
+					b = seBlue;
 				}
 				else
 				{
-					// Color from the colormap.
-					a = ( c >> 24 ) & 0xFF;
-					r = ( c >> 16 ) & 0xFF;
-					g = ( c >> 8 ) & 0xFF;
-					b = c & 255;
+					final int c = graphColorGenerator.color( e, sref, tref );
+					if ( c == 0 )
+					{
+						// Default cColor from the style.
+						a = eAlpha;
+						r = eRed;
+						g = eGreen;
+						b = eBlue;
+					}
+					else
+					{
+						// Color from the colormap.
+						a = ( c >> 24 ) & 0xFF;
+						r = ( c >> 16 ) & 0xFF;
+						g = ( c >> 8 ) & 0xFF;
+						b = c & 255;
+					}
 				}
 
 				// RGBA
