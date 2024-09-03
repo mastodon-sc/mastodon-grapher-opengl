@@ -34,7 +34,6 @@ import org.mastodon.mamut.model.Spot;
 import org.mastodon.mamut.model.branch.BranchLink;
 import org.mastodon.mamut.model.branch.BranchSpot;
 import org.mastodon.mamut.views.MamutView;
-import org.mastodon.model.AutoNavigateFocusModel;
 import org.mastodon.model.tag.TagSetStructure.TagSet;
 import org.mastodon.ui.SelectionActions;
 import org.mastodon.ui.coloring.ColorBarOverlay;
@@ -74,9 +73,6 @@ public class MamutViewOpenGL extends MamutView< ViewGraph< Spot, Link, Spot, Lin
 
 		final KeyPressedManager keyPressedManager = appModel.getKeyPressedManager();
 		final Model model = appModel.getModel();
-
-		final AutoNavigateFocusModel< Spot, Link > navigateFocusModel =
-				new AutoNavigateFocusModel<>( focusModel, navigationHandler );
 
 		final DataDisplayStyleManager dataDisplayStyleManager = appModel.getWindowManager().getManager( DataDisplayStyleManager.class );
 		final DataDisplayStyle forwardDefaultStyle = dataDisplayStyleManager.getForwardDefaultStyle();
