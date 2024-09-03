@@ -106,8 +106,9 @@ public class MamutViewOpenGL extends MamutView< ViewGraph< Spot, Link, Spot, Lin
 				SpotPositionFeature.PROJECTION_SPECS.get( 0 ), false, false );
 		final FeatureSpecPair spvy = new FeatureSpecPair( SpotPositionFeature.SPEC,
 				SpotPositionFeature.PROJECTION_SPECS.get( 1 ), 0, false, false );
+		final boolean showEdges = false;
 		final FeatureGraphConfig gcv =
-				new FeatureGraphConfig( spvx, spvy, GraphDataItemsSource.CONTEXT, true );
+				new FeatureGraphConfig( spvx, spvy, GraphDataItemsSource.CONTEXT, showEdges );
 		frame.getVertexSidePanel().setGraphConfig( gcv );
 
 //		contextListener.setContextListener( dataDisplayPanel );
