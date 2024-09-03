@@ -95,6 +95,13 @@
 			<artifactId>lwjgl3-awt</artifactId>
 			<version>${lwjgl3-awt.version}</version>
 		</dependency>
+		
+		<!-- Test dependencies -->
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
+		</dependency>
 
 	</dependencies>
 
