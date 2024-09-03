@@ -133,6 +133,10 @@ public class BoxSelectionBehaviour extends AbstractNamedBehaviour implements Dra
 				lock.readLock().unlock();
 			}
 		}
+		else
+		{
+			selection.clearSelection();
+		}
 		pointCloudPanel.overlayChanged();
 	}
 
