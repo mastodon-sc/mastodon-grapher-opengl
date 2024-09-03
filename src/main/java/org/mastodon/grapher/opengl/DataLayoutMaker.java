@@ -3,6 +3,10 @@ package org.mastodon.grapher.opengl;
 import static org.mastodon.grapher.opengl.overlays.DataPointsOverlay.COLOR_SIZE;
 import static org.mastodon.grapher.opengl.overlays.DataPointsOverlay.VERTEX_SIZE;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.ToDoubleFunction;
+
 import org.mastodon.collection.RefCollections;
 import org.mastodon.collection.RefSet;
 import org.mastodon.feature.FeatureModel;
@@ -11,6 +15,7 @@ import org.mastodon.graph.Edges;
 import org.mastodon.graph.algorithm.traversal.DepthFirstSearch;
 import org.mastodon.graph.algorithm.traversal.GraphSearch.SearchDirection;
 import org.mastodon.graph.algorithm.traversal.SearchListener;
+import org.mastodon.grapher.opengl.util.KdTreeWrapper;
 import org.mastodon.mamut.model.Link;
 import org.mastodon.mamut.model.ModelGraph;
 import org.mastodon.mamut.model.Spot;
@@ -20,6 +25,9 @@ import org.mastodon.views.context.Context;
 import org.mastodon.views.context.ContextListener;
 import org.mastodon.views.grapher.display.FeatureGraphConfig;
 import org.mastodon.views.grapher.display.FeatureSpecPair;
+
+import net.imglib2.algorithm.kdtree.ConvexPolytope;
+import net.imglib2.algorithm.kdtree.HyperPlane;
 
 public class DataLayoutMaker implements ContextListener< Spot >
 {
@@ -55,6 +63,8 @@ public class DataLayoutMaker implements ContextListener< Spot >
 	private Context< Spot > context;
 
 	private final GraphColorGenerator< Spot, Link > graphColorGenerator;
+
+	private KdTreeWrapper< Spot > kdtree;
 
 	public DataLayoutMaker(
 			final ModelGraph graph,
@@ -114,6 +124,7 @@ public class DataLayoutMaker implements ContextListener< Spot >
 	 */
 	public DataLayout layout()
 	{
+		kdtree = null;
 		if ( vertices.isEmpty() )
 			return new DataLayout( new float[] {}, new int[] {}, new float[] {} );
 
@@ -132,6 +143,10 @@ public class DataLayoutMaker implements ContextListener< Spot >
 				xyPos[ i++ ] = x;
 				xyPos[ i++ ] = y;
 			}
+			final List< ToDoubleFunction< Spot > > posFuns = new ArrayList<>( 2 );
+			posFuns.add( v -> getXFeatureValue( v ) );
+			posFuns.add( v -> getYFeatureValue( v ) );
+			kdtree = new KdTreeWrapper<>( vertices, graph.vertices().getRefPool(), posFuns );
 		}
 
 		/*
@@ -327,6 +342,43 @@ public class DataLayoutMaker implements ContextListener< Spot >
 			return xpe.value( edges.iterator().next() );
 		}
 		return Double.NaN;
+	}
+
+	/**
+	 * Returns the set of data vertices that are painted according to this
+	 * layout instance, within the specified <b>screen coordinates</b>.
+	 * 
+	 * @param x1
+	 *            x min in screen coordinates.
+	 * @param y1
+	 *            y min in screen coordinates.
+	 * @param x2
+	 *            x max in screen coordinates.
+	 * @param y2
+	 *            y max in screen coordinates.
+	 * @return a new {@link RefSet}.
+	 */
+	public RefSet< Spot > getSpotWithin( final double x1, final double y1, final double x2, final double y2 )
+	{
+		final RefSet< Spot > set = RefCollections.createRefSet( graph.vertices() );
+		if ( kdtree == null )
+			return set;
+
+		final double lx1 = Math.min( x1, x2 );
+		final double lx2 = Math.max( x1, x2 );
+		final double ly1 = Math.min( y1, y2 );
+		final double ly2 = Math.max( y1, y2 );
+
+		// Make hyperplanes for transform view.
+		final HyperPlane hpMinX = new HyperPlane( new double[] { 1., 0. }, lx1 );
+		final HyperPlane hpMaxX = new HyperPlane( new double[] { -1., 0. }, -lx2 );
+		final HyperPlane hpMinY = new HyperPlane( new double[] { 0., 1. }, ly1 );
+		final HyperPlane hpMaxY = new HyperPlane( new double[] { 0., -1. }, -ly2 );
+
+		// Convex polytope from hyperplanes.
+		final ConvexPolytope polytope = new ConvexPolytope( hpMinX, hpMinY, hpMaxX, hpMaxY );
+
+		return kdtree.getObjsWithin( polytope );
 	}
 
 	public void setConfig( final FeatureGraphConfig gc )

@@ -77,7 +77,7 @@ public class PointCloudPanel extends JPanel implements Paintable, ContextListene
 
 	private final DataLayoutMaker layout;
 
-	private DataEdgesOverlay dataEdgesOverlay;
+	private final DataEdgesOverlay dataEdgesOverlay;
 
 	public PointCloudPanel( final DataLayoutMaker layout )
 	{
@@ -229,7 +229,17 @@ public class PointCloudPanel extends JPanel implements Paintable, ContextListene
 	{
 		dataPointsOverlay.updateColors();
 		dataPointsOverlay.updateColors();
-		paint();
+		painterThread.requestRepaint();
+	}
+
+	public void overlayChanged()
+	{
+		painterThread.requestRepaint();
+	}
+
+	public DataLayoutMaker getDataLayout()
+	{
+		return layout;
 	}
 
 	@Override

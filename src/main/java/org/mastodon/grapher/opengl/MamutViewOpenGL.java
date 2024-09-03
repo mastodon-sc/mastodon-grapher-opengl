@@ -22,6 +22,7 @@ import org.mastodon.app.ViewGraph;
 import org.mastodon.app.ui.MastodonFrameViewActions;
 import org.mastodon.app.ui.ViewMenu;
 import org.mastodon.app.ui.ViewMenuBuilder.JMenuHandle;
+import org.mastodon.grapher.opengl.overlays.BoxSelectionBehaviour;
 import org.mastodon.mamut.MainWindow;
 import org.mastodon.mamut.MamutMenuBuilder;
 import org.mastodon.mamut.ProjectModel;
@@ -102,13 +103,10 @@ public class MamutViewOpenGL extends MamutView< ViewGraph< Spot, Link, Spot, Lin
 		dataDisplayPanel = frame.getDataDisplayPanel();
 
 		// If they are available, set some sensible defaults for the feature.
-		final FeatureSpecPair spvx = new FeatureSpecPair( SpotPositionFeature.SPEC,
-				SpotPositionFeature.PROJECTION_SPECS.get( 0 ), false, false );
-		final FeatureSpecPair spvy = new FeatureSpecPair( SpotPositionFeature.SPEC,
-				SpotPositionFeature.PROJECTION_SPECS.get( 1 ), 0, false, false );
+		final FeatureSpecPair spvx = new FeatureSpecPair( SpotPositionFeature.SPEC, SpotPositionFeature.PROJECTION_SPECS.get( 0 ), false, false );
+		final FeatureSpecPair spvy = new FeatureSpecPair( SpotPositionFeature.SPEC, SpotPositionFeature.PROJECTION_SPECS.get( 1 ), 0, false, false );
 		final boolean showEdges = false;
-		final FeatureGraphConfig gcv =
-				new FeatureGraphConfig( spvx, spvy, GraphDataItemsSource.CONTEXT, showEdges );
+		final FeatureGraphConfig gcv = new FeatureGraphConfig( spvx, spvy, GraphDataItemsSource.CONTEXT, showEdges );
 		frame.getVertexSidePanel().setGraphConfig( gcv );
 
 //		contextListener.setContextListener( dataDisplayPanel );
@@ -116,6 +114,14 @@ public class MamutViewOpenGL extends MamutView< ViewGraph< Spot, Link, Spot, Lin
 		dataDisplayPanel.plot( gcv );
 		dataDisplayPanel.getTransformEventHandler().zoomTo( -10000, 10000, -10000, 10000 );
 		dataDisplayPanel.getTransformEventHandler().install( viewBehaviours );
+
+		BoxSelectionBehaviour.install(
+				viewBehaviours,
+				dataDisplayPanel,
+				model.getGraph(),
+				focusModel,
+				selectionModel,
+				model.getGraph().getLock() );
 
 		/*
 		 * Menus

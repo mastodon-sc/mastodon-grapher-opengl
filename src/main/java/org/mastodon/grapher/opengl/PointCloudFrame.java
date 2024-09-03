@@ -75,8 +75,7 @@ public class PointCloudFrame extends ViewFrame
 		 * Main panel is a split pane.
 		 */
 
-		final JSplitPane mainPanel = new JSplitPane( JSplitPane.HORIZONTAL_SPLIT,
-				sidePanel, dataDisplayPanel );
+		final JSplitPane mainPanel = new JSplitPane( JSplitPane.HORIZONTAL_SPLIT, sidePanel, dataDisplayPanel );
 		mainPanel.setOneTouchExpandable( true );
 		mainPanel.setContinuousLayout( true );
 		mainPanel.setBorder( null );
@@ -106,8 +105,7 @@ public class PointCloudFrame extends ViewFrame
 		} );
 
 		SwingUtilities.replaceUIActionMap( dataDisplayPanel, keybindings.getConcatenatedActionMap() );
-		SwingUtilities.replaceUIInputMap( dataDisplayPanel, JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT,
-				keybindings.getConcatenatedInputMap() );
+		SwingUtilities.replaceUIInputMap( dataDisplayPanel, JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT, keybindings.getConcatenatedInputMap() );
 
 		final MouseAndKeyHandler mouseAndKeyHandler = new MouseAndKeyHandler();
 		mouseAndKeyHandler.setInputMap( triggerbindings.getConcatenatedInputTriggerMap() );
