@@ -6,7 +6,6 @@ import org.mastodon.grapher.opengl.DataLayoutMaker.DataColor;
 import org.mastodon.grapher.opengl.DataLayoutMaker.DataLayout;
 import org.mastodon.grapher.opengl.InertialScreenTransformEventHandler;
 import org.mastodon.grapher.opengl.LayoutChangeListener;
-import org.mastodon.views.grapher.display.FeatureGraphConfig;
 import org.scijava.listeners.Listeners;
 
 public class DataPointsOverlay implements GLOverlayRenderer
@@ -16,13 +15,11 @@ public class DataPointsOverlay implements GLOverlayRenderer
 
 	public static final int COLOR_SIZE = 4; // R, G, B, alpha
 
-	private static final int EDGE_SIZE = 2; // source ID, target ID
+	public static final float DEFAULT_POINT_SIZE = 5.1f;
 
 	private int vboVertexPositionHandle;
 
 	private int vboVertexColorHandle;
-
-	private final float pointSize = 5.1f;
 
 	private float[] vertexPosData = new float[] {};
 
@@ -94,7 +91,7 @@ public class DataPointsOverlay implements GLOverlayRenderer
 	@Override
 	public void paint()
 	{
-		GL33.glPointSize( pointSize );
+		GL33.glPointSize( DEFAULT_POINT_SIZE );
 
 		if ( updateXY )
 		{
@@ -147,9 +144,8 @@ public class DataPointsOverlay implements GLOverlayRenderer
 		GL33.glDisableClientState( GL33.GL_VERTEX_ARRAY );
 	}
 
-	public void plot( final FeatureGraphConfig graphConfig )
+	public void draw( final DataLayout l )
 	{
-		final DataLayout l = layout.layout();
 		putCoords( l.verticesPos );
 		final DataColor c = layout.color();
 		putColors( c.verticesColor );

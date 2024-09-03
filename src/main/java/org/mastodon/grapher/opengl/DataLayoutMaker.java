@@ -20,6 +20,7 @@ import org.mastodon.grapher.opengl.util.KdTreeWrapper;
 import org.mastodon.mamut.model.Link;
 import org.mastodon.mamut.model.ModelGraph;
 import org.mastodon.mamut.model.Spot;
+import org.mastodon.model.HighlightModel;
 import org.mastodon.model.SelectionModel;
 import org.mastodon.ui.coloring.GraphColorGenerator;
 import org.mastodon.views.context.Context;
@@ -52,6 +53,8 @@ public class DataLayoutMaker implements ContextListener< Spot >
 
 	private final ModelGraph graph;
 
+	private final HighlightModel< Spot, Link > highlight;
+
 	private final SelectionModel< Spot, Link > selection;
 
 	private RefSet< Spot > vertices;
@@ -72,11 +75,13 @@ public class DataLayoutMaker implements ContextListener< Spot >
 
 	public DataLayoutMaker(
 			final ModelGraph graph,
+			final HighlightModel< Spot, Link > highlight,
 			final SelectionModel< Spot, Link > selection,
 			final FeatureModel featureModel,
 			final DataDisplayOptions options )
 	{
 		this.graph = graph;
+		this.highlight = highlight;
 		this.selection = selection;
 		this.featureModel = featureModel;
 		this.graphColorGenerator = options.values.getGraphColorGenerator();
@@ -195,6 +200,37 @@ public class DataLayoutMaker implements ContextListener< Spot >
 		return new DataLayout( xyPos, edgeIndices, edgePositions );
 	}
 
+	public float[][] getHighlightVertexData()
+	{
+		final Spot vref = graph.vertexRef();
+		try
+		{
+			final Spot hv = highlight.getHighlightedVertex( vref );
+			if ( hv == null )
+				return null;
+
+			final float[] color = new float[ 4 ];
+			colorVertex( hv, color );
+
+			final Color bg = style.getBackgroundColor();
+			return new float[][] {
+					new float[] {
+							( float ) getXFeatureValue( hv ),
+							( float ) getYFeatureValue( hv ) },
+					color,
+					new float[] {
+							bg.getRed() / 255f,
+							bg.getGreen() / 255f,
+							bg.getBlue() / 255f,
+							bg.getAlpha() / 255f }
+			};
+		}
+		finally
+		{
+			graph.releaseRef( vref );
+		}
+	}
+
 	/**
 	 * Returns a new color specification for the objects displayed based on the
 	 * color generator specified at construction.
@@ -210,58 +246,18 @@ public class DataLayoutMaker implements ContextListener< Spot >
 		 * Vertex colors.
 		 */
 
-		final Color vColor = style.getSimplifiedVertexFillColor();
-		final int vRed = vColor.getRed();
-		final int vGreen = vColor.getGreen();
-		final int vBlue = vColor.getBlue();
-		final int vAlpha = vColor.getAlpha();
-
-		final Color svColor = style.getSelectedSimplifiedVertexFillColor();
-		final int svRed = svColor.getRed();
-		final int svGreen = svColor.getGreen();
-		final int svBlue = svColor.getBlue();
-		final int svAlpha = svColor.getAlpha();
-
 		final int n = vertices.size();
 		final float[] vertexColors = new float[ COLOR_SIZE * n ];
+		final float[] tmp = new float[ 4 ];
 		int i = 0;
 		for ( final Spot spot : vertices )
 		{
-			final int a;
-			final int r;
-			final int g;
-			final int b;
-			if ( selection.isSelected( spot ) )
-			{
-				r = svRed;
-				g = svGreen;
-				b = svBlue;
-				a = svAlpha;
-			}
-			else
-			{
-				final int c = graphColorGenerator.color( spot );
-				if ( c == 0 )
-				{
-					a = vAlpha;
-					r = vRed;
-					g = vGreen;
-					b = vBlue;
-				}
-				else
-				{
-					// Color from the colormap.
-					a = ( c >> 24 ) & 0xFF;
-					r = ( c >> 16 ) & 0xFF;
-					g = ( c >> 8 ) & 0xFF;
-					b = c & 255;
-				}
-			}
 			// RGBA
-			vertexColors[ i++ ] = ( r / 255f );
-			vertexColors[ i++ ] = ( g / 255f );
-			vertexColors[ i++ ] = ( b / 255f );
-			vertexColors[ i++ ] = ( a / 255f );
+			colorVertex( spot, tmp );
+			vertexColors[ i++ ] = tmp[ 0 ];
+			vertexColors[ i++ ] = tmp[ 1 ];
+			vertexColors[ i++ ] = tmp[ 2 ];
+			vertexColors[ i++ ] = tmp[ 3 ];
 		}
 
 		/*
@@ -343,6 +339,56 @@ public class DataLayoutMaker implements ContextListener< Spot >
 		}
 
 		return new DataColor( vertexColors, edgeColors );
+	}
+
+	private void colorVertex( final Spot spot, final float[] out )
+	{
+		final Color vColor = style.getSimplifiedVertexFillColor();
+		final int vRed = vColor.getRed();
+		final int vGreen = vColor.getGreen();
+		final int vBlue = vColor.getBlue();
+		final int vAlpha = vColor.getAlpha();
+
+		final Color svColor = style.getSelectedSimplifiedVertexFillColor();
+		final int svRed = svColor.getRed();
+		final int svGreen = svColor.getGreen();
+		final int svBlue = svColor.getBlue();
+		final int svAlpha = svColor.getAlpha();
+
+		final int a;
+		final int r;
+		final int g;
+		final int b;
+		if ( selection.isSelected( spot ) )
+		{
+			r = svRed;
+			g = svGreen;
+			b = svBlue;
+			a = svAlpha;
+		}
+		else
+		{
+			final int c = graphColorGenerator.color( spot );
+			if ( c == 0 )
+			{
+				a = vAlpha;
+				r = vRed;
+				g = vGreen;
+				b = vBlue;
+			}
+			else
+			{
+				// Color from the colormap.
+				a = ( c >> 24 ) & 0xFF;
+				r = ( c >> 16 ) & 0xFF;
+				g = ( c >> 8 ) & 0xFF;
+				b = c & 255;
+			}
+		}
+		out[ 0 ] = ( r / 255f );
+		out[ 1 ] = ( g / 255f );
+		out[ 2 ] = ( b / 255f );
+		out[ 3 ] = ( a / 255f );
 	}
 
 	private void setVertices( final RefSet< Spot > vertices )
@@ -596,7 +642,10 @@ public class DataLayoutMaker implements ContextListener< Spot >
 
 		public final float[] edgePositions;
 
-		public DataLayout( final float[] verticesPos, final int[] edgeIndices, final float[] edgePositions )
+		public DataLayout(
+				final float[] verticesPos,
+				final int[] edgeIndices,
+				final float[] edgePositions )
 		{
 			this.verticesPos = verticesPos;
 			this.edgeIndices = edgeIndices;

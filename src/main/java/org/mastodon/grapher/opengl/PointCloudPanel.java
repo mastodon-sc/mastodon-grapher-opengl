@@ -18,8 +18,10 @@ import javax.swing.JScrollBar;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
+import org.mastodon.grapher.opengl.DataLayoutMaker.DataLayout;
 import org.mastodon.grapher.opengl.overlays.DataEdgesOverlay;
 import org.mastodon.grapher.opengl.overlays.DataPointsOverlay;
+import org.mastodon.grapher.opengl.overlays.HighlightOverlay;
 import org.mastodon.mamut.model.Spot;
 import org.mastodon.views.context.Context;
 import org.mastodon.views.context.ContextListener;
@@ -79,6 +81,8 @@ public class PointCloudPanel extends JPanel implements Paintable, ContextListene
 
 	private final DataEdgesOverlay dataEdgesOverlay;
 
+	private final HighlightOverlay highlightOverlay;
+
 	public PointCloudPanel( final DataLayoutMaker layout )
 	{
 		super( new BorderLayout(), false );
@@ -100,9 +104,11 @@ public class PointCloudPanel extends JPanel implements Paintable, ContextListene
 		// Overlays for the canvas.
 		this.dataEdgesOverlay = new DataEdgesOverlay( layout );
 		this.dataPointsOverlay = new DataPointsOverlay( layout, transformHandler );
+		this.highlightOverlay = new HighlightOverlay( layout );
 		dataPointsOverlay.getLayoutChangeListeners().add( this );
 		canvas.overlays().add( dataEdgesOverlay );
 		canvas.overlays().add( dataPointsOverlay );
+		canvas.overlays().add( highlightOverlay );
 
 		// Bottom axis.
 		final JPanel xAxis = new MyXAxisPanel( canvas.t );
@@ -221,14 +227,21 @@ public class PointCloudPanel extends JPanel implements Paintable, ContextListene
 	public void plot( final FeatureGraphConfig gc )
 	{
 		layout.setConfig( gc );
-		dataPointsOverlay.plot( gc );
-		dataEdgesOverlay.plot( gc );
+		final DataLayout dataLayout = layout.layout();
+		dataPointsOverlay.draw( dataLayout );
+		dataEdgesOverlay.draw( dataLayout );
 	}
 
 	public void updateColor()
 	{
 		dataPointsOverlay.updateColors();
 		dataEdgesOverlay.updateColors();
+		painterThread.requestRepaint();
+	}
+
+	public void updateHighlight()
+	{
+		highlightOverlay.update();
 		painterThread.requestRepaint();
 	}
 
