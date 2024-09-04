@@ -1,6 +1,5 @@
 package org.mastodon.grapher.opengl;
 
-import static org.lwjgl.opengl.GL.createCapabilities;
 import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
 import static org.lwjgl.opengl.GL11.glClear;
 import static org.lwjgl.opengl.GL11.glClearColor;
@@ -175,7 +174,7 @@ public class PointCloudCanvas extends AWTGLCanvas
 	@Override
 	public void initGL()
 	{
-		createCapabilities();
+		GL.createCapabilities();
 		
 		GL11.glDisable( GL11.GL_DEPTH_TEST );
 		GL11.glDisable( GL11.GL_CULL_FACE );
