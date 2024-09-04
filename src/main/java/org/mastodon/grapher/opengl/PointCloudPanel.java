@@ -42,7 +42,7 @@ public class PointCloudPanel extends JPanel implements Paintable, ContextListene
 
 	private final PainterThread painterThread;
 
-	private final InertialScreenTransformEventHandler transformHandler;
+	private final InertialScreenTransformEventHandlerOpenGL transformHandler;
 
 	private final JScrollBar xScrollBar;
 
@@ -97,7 +97,7 @@ public class PointCloudPanel extends JPanel implements Paintable, ContextListene
 
 		// Screen transform.
 		this.screenTransform = new ScreenTransformState( new ScreenTransform( -1, 1, -1, 1, w, h ) );
-		this.transformHandler = new InertialScreenTransformEventHandler( screenTransform );
+		this.transformHandler = new InertialScreenTransformEventHandlerOpenGL( screenTransform );
 		canvas.setTransformEventHandler( transformHandler );
 		screenTransform.listeners().add( this );
 
@@ -208,7 +208,7 @@ public class PointCloudPanel extends JPanel implements Paintable, ContextListene
 		System.out.println( "Context changed!" ); // DEBUG
 	}
 
-	public InertialScreenTransformEventHandler getTransformEventHandler()
+	public InertialScreenTransformEventHandlerOpenGL getTransformEventHandler()
 	{
 		return transformHandler;
 	}

@@ -4,7 +4,7 @@ import org.lwjgl.opengl.GL33;
 import org.mastodon.grapher.opengl.DataLayoutMaker;
 import org.mastodon.grapher.opengl.DataLayoutMaker.DataColor;
 import org.mastodon.grapher.opengl.DataLayoutMaker.DataLayout;
-import org.mastodon.grapher.opengl.InertialScreenTransformEventHandler;
+import org.mastodon.grapher.opengl.InertialScreenTransformEventHandlerOpenGL;
 import org.mastodon.grapher.opengl.LayoutChangeListener;
 import org.scijava.listeners.Listeners;
 
@@ -31,11 +31,11 @@ public class DataPointsOverlay implements GLOverlayRenderer
 
 	private final DataLayoutMaker layout;
 
-	private final InertialScreenTransformEventHandler transformHandler;
+	private final InertialScreenTransformEventHandlerOpenGL transformHandler;
 
 	private final Listeners.List< LayoutChangeListener > layoutChangeListeners;
 
-	public DataPointsOverlay( final DataLayoutMaker layout, final InertialScreenTransformEventHandler transformHandler )
+	public DataPointsOverlay( final DataLayoutMaker layout, final InertialScreenTransformEventHandlerOpenGL transformHandler )
 	{
 		this.layout = layout;
 		this.transformHandler = transformHandler;
