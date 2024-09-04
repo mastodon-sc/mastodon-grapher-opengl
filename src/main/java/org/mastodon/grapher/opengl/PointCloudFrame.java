@@ -118,8 +118,14 @@ public class PointCloudFrame extends ViewFrame
 		mouseAndKeyHandler.setBehaviourMap( triggerbindings.getConcatenatedBehaviourMap() );
 		mouseAndKeyHandler.setKeypressManager( optional.values.getKeyPressedManager(), dataDisplayPanel.getCanvas() );
 		dataDisplayPanel.getCanvas().addHandler( mouseAndKeyHandler );
-		setLocation( optional.values.getX(), optional.values.getY() );
+
 		pack();
+		final int x = optional.values.getX();
+		final int y = optional.values.getY();
+		if ( x <= 0 && y <= 0 )
+			setLocationRelativeTo( null );
+		else
+			setLocation( x, y );
 	}
 
 	public GrapherSidePanel getVertexSidePanel()
