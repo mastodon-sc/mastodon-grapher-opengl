@@ -25,6 +25,7 @@ import org.mastodon.app.ui.ViewMenuBuilder.JMenuHandle;
 import org.mastodon.grapher.opengl.PointCloudFrame;
 import org.mastodon.grapher.opengl.PointCloudPanel;
 import org.mastodon.grapher.opengl.overlays.BoxSelectionBehaviour;
+import org.mastodon.grapher.opengl.overlays.DataDisplayZoomGL;
 import org.mastodon.mamut.MainWindow;
 import org.mastodon.mamut.MamutMenuBuilder;
 import org.mastodon.mamut.ProjectModel;
@@ -98,7 +99,6 @@ public class MamutViewGrapherOpenGL extends MamutView< ViewGraph< Spot, Link, Sp
 				groupHandle,
 				options );
 		setFrame( frame );
-
 		dataDisplayPanel = frame.getDataDisplayPanel();
 
 		// If they are available, set some sensible defaults for the feature.
@@ -114,6 +114,7 @@ public class MamutViewGrapherOpenGL extends MamutView< ViewGraph< Spot, Link, Sp
 		dataDisplayPanel.getTransformEventHandler().zoomTo( -10000, 10000, -10000, 10000 );
 		dataDisplayPanel.getTransformEventHandler().install( viewBehaviours );
 
+		// Select with a box.
 		BoxSelectionBehaviour.install(
 				viewBehaviours,
 				dataDisplayPanel,
@@ -121,6 +122,9 @@ public class MamutViewGrapherOpenGL extends MamutView< ViewGraph< Spot, Link, Sp
 				focusModel,
 				selectionModel,
 				model.getGraph().getLock() );
+
+		// Zoom with a box.
+		DataDisplayZoomGL.install( viewBehaviours, dataDisplayPanel );
 
 		/*
 		 * Menus
@@ -223,7 +227,6 @@ public class MamutViewGrapherOpenGL extends MamutView< ViewGraph< Spot, Link, Sp
 		dataDisplayPanel.repaint();
 		dataDisplayPanel.getCanvas().requestFocusInWindow();
 
-		frame.setSize( 800, 550 );
 		frame.setVisible( true );
 	}
 
