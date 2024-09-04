@@ -25,6 +25,7 @@ import org.mastodon.model.SelectionModel;
 import org.mastodon.ui.coloring.GraphColorGenerator;
 import org.mastodon.views.context.Context;
 import org.mastodon.views.context.ContextListener;
+import org.mastodon.views.grapher.display.DataDisplayOptions;
 import org.mastodon.views.grapher.display.FeatureGraphConfig;
 import org.mastodon.views.grapher.display.FeatureSpecPair;
 import org.mastodon.views.grapher.display.style.DataDisplayStyle;
@@ -78,7 +79,7 @@ public class DataLayoutMaker implements ContextListener< Spot >
 			final HighlightModel< Spot, Link > highlight,
 			final SelectionModel< Spot, Link > selection,
 			final FeatureModel featureModel,
-			final DataDisplayOptions options )
+			final DataDisplayOptions< Spot, Link > options )
 	{
 		this.graph = graph;
 		this.highlight = highlight;

@@ -25,6 +25,7 @@ import org.mastodon.model.SelectionModel;
 import org.mastodon.undo.UndoPointMarker;
 import org.mastodon.util.FeatureUtils;
 import org.mastodon.views.context.ContextChooser;
+import org.mastodon.views.grapher.display.DataDisplayOptions;
 import org.mastodon.views.grapher.display.GrapherSidePanel;
 import org.scijava.ui.behaviour.MouseAndKeyHandler;
 
@@ -46,7 +47,7 @@ public class PointCloudFrame extends ViewFrame
 			final NavigationHandler< Spot, Link > navigation,
 			final UndoPointMarker undoPointMarker,
 			final GroupHandle groupHandle,
-			final DataDisplayOptions optional )
+			final DataDisplayOptions< Spot, Link > optional )
 	{
 		super( "OpenGL Grapher" );
 

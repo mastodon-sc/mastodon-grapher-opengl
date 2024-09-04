@@ -22,7 +22,6 @@ import org.mastodon.app.ViewGraph;
 import org.mastodon.app.ui.MastodonFrameViewActions;
 import org.mastodon.app.ui.ViewMenu;
 import org.mastodon.app.ui.ViewMenuBuilder.JMenuHandle;
-import org.mastodon.grapher.opengl.DataDisplayOptions;
 import org.mastodon.grapher.opengl.PointCloudFrame;
 import org.mastodon.grapher.opengl.PointCloudPanel;
 import org.mastodon.grapher.opengl.overlays.BoxSelectionBehaviour;
@@ -45,6 +44,7 @@ import org.mastodon.ui.coloring.ColoringModelMain;
 import org.mastodon.ui.coloring.GraphColorGeneratorAdapter;
 import org.mastodon.ui.coloring.feature.FeatureColorMode;
 import org.mastodon.ui.keymap.KeyConfigContexts;
+import org.mastodon.views.grapher.display.DataDisplayOptions;
 import org.mastodon.views.grapher.display.FeatureGraphConfig;
 import org.mastodon.views.grapher.display.FeatureGraphConfig.GraphDataItemsSource;
 import org.mastodon.views.grapher.display.FeatureSpecPair;
@@ -80,8 +80,8 @@ public class MamutViewGrapherOpenGL extends MamutView< ViewGraph< Spot, Link, Sp
 		final DataDisplayStyleManager dataDisplayStyleManager = appModel.getWindowManager().getManager( DataDisplayStyleManager.class );
 		final DataDisplayStyle forwardDefaultStyle = dataDisplayStyleManager.getForwardDefaultStyle();
 		coloringAdapter = new GraphColorGeneratorAdapter<>( viewGraph.getVertexMap(), viewGraph.getEdgeMap() );
-		final DataDisplayOptions options = DataDisplayOptions.options()
-				.shareKeyPressedEvents( keyPressedManager )
+		final DataDisplayOptions< Spot, Link > options = DataDisplayOptions.options();
+		options.shareKeyPressedEvents( keyPressedManager )
 				.style( forwardDefaultStyle )
 				.graphColorGenerator( coloringAdapter );
 
