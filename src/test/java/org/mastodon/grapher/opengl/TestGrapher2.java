@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import javax.swing.JFrame;
 
+import org.mastodon.grapher.opengl.mamut.MamutViewGrapherOpenGL;
 import org.mastodon.mamut.MainWindow;
 import org.mastodon.mamut.ProjectModel;
 import org.mastodon.mamut.io.ProjectLoader;
@@ -22,7 +23,7 @@ public class TestGrapher2
 		final ProjectModel projectModel = ProjectLoader.open( projectPath, context );
 		new MainWindow( projectModel ).setVisible( true );
 
-		final MamutViewOpenGL grapher = projectModel.getWindowManager().createView( MamutViewOpenGL.class );
+		final MamutViewGrapherOpenGL grapher = projectModel.getWindowManager().createView( MamutViewGrapherOpenGL.class );
 		grapher.getFrame().setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
 	}
 }

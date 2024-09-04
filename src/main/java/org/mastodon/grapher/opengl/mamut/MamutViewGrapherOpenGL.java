@@ -1,4 +1,4 @@
-package org.mastodon.grapher.opengl;
+package org.mastodon.grapher.opengl.mamut;
 
 import static org.mastodon.app.ui.ViewMenuBuilder.item;
 import static org.mastodon.app.ui.ViewMenuBuilder.separator;
@@ -22,6 +22,9 @@ import org.mastodon.app.ViewGraph;
 import org.mastodon.app.ui.MastodonFrameViewActions;
 import org.mastodon.app.ui.ViewMenu;
 import org.mastodon.app.ui.ViewMenuBuilder.JMenuHandle;
+import org.mastodon.grapher.opengl.DataDisplayOptions;
+import org.mastodon.grapher.opengl.PointCloudFrame;
+import org.mastodon.grapher.opengl.PointCloudPanel;
 import org.mastodon.grapher.opengl.overlays.BoxSelectionBehaviour;
 import org.mastodon.mamut.MainWindow;
 import org.mastodon.mamut.MamutMenuBuilder;
@@ -49,7 +52,7 @@ import org.mastodon.views.grapher.display.style.DataDisplayStyle;
 import org.mastodon.views.grapher.display.style.DataDisplayStyleManager;
 import org.scijava.ui.behaviour.KeyPressedManager;
 
-public class MamutViewOpenGL extends MamutView< ViewGraph< Spot, Link, Spot, Link >, Spot, Link >
+public class MamutViewGrapherOpenGL extends MamutView< ViewGraph< Spot, Link, Spot, Link >, Spot, Link >
 {
 
 	private final GraphColorGeneratorAdapter< Spot, Link, Spot, Link > coloringAdapter;
@@ -60,12 +63,12 @@ public class MamutViewOpenGL extends MamutView< ViewGraph< Spot, Link, Spot, Lin
 
 	private final ColorBarOverlay colorbarOverlay;
 
-	public MamutViewOpenGL( final ProjectModel appModel )
+	public MamutViewGrapherOpenGL( final ProjectModel appModel )
 	{
 		this(appModel, new HashMap<>());
 	}
 	
-	public MamutViewOpenGL( final ProjectModel appModel, final Map< String, Object > guiState )
+	public MamutViewGrapherOpenGL( final ProjectModel appModel, final Map< String, Object > guiState )
 	{
 		super( appModel,
 				createViewGraph( appModel ),

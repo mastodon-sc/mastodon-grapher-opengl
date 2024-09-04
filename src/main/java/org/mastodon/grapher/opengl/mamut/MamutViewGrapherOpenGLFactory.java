@@ -32,7 +32,6 @@ import static org.mastodon.mamut.views.grapher.MamutViewGrapherFactory.GRAPHER_T
 
 import java.util.Map;
 
-import org.mastodon.grapher.opengl.MamutViewOpenGL;
 import org.mastodon.mamut.ProjectModel;
 import org.mastodon.mamut.views.AbstractMamutViewFactory;
 import org.mastodon.mamut.views.MamutViewFactory;
@@ -47,20 +46,20 @@ import org.scijava.plugin.Plugin;
  * @see MamutViewGrapher
  */
 @Plugin( type = MamutViewFactory.class, priority = Priority.NORMAL - 4 )
-public class MamutViewGrapherOpenGLFactory extends AbstractMamutViewFactory< MamutViewOpenGL >
+public class MamutViewGrapherOpenGLFactory extends AbstractMamutViewFactory< MamutViewGrapherOpenGL >
 {
 
 	public static final String NEW_GRAPHER_VIEW = "new grapher openGL view";
 
 
 	@Override
-	public MamutViewOpenGL create( final ProjectModel projectModel )
+	public MamutViewGrapherOpenGL create( final ProjectModel projectModel )
 	{
-		return new MamutViewOpenGL( projectModel );
+		return new MamutViewGrapherOpenGL( projectModel );
 	}
 
 	@Override
-	public Map< String, Object > getGuiState( final MamutViewOpenGL view )
+	public Map< String, Object > getGuiState( final MamutViewGrapherOpenGL view )
 	{
 		final Map< String, Object > guiState = super.getGuiState( view );
 		// Transform.
@@ -72,7 +71,7 @@ public class MamutViewGrapherOpenGLFactory extends AbstractMamutViewFactory< Mam
 
 
 	@Override
-	public void restoreGuiState( final MamutViewOpenGL view, final Map< String, Object > guiState )
+	public void restoreGuiState( final MamutViewGrapherOpenGL view, final Map< String, Object > guiState )
 	{
 		super.restoreGuiState( view, guiState );
 
@@ -101,8 +100,8 @@ public class MamutViewGrapherOpenGLFactory extends AbstractMamutViewFactory< Mam
 	}
 
 	@Override
-	public Class< MamutViewOpenGL > getViewClass()
+	public Class< MamutViewGrapherOpenGL > getViewClass()
 	{
-		return MamutViewOpenGL.class;
+		return MamutViewGrapherOpenGL.class;
 	}
 }

@@ -1,6 +1,8 @@
 package org.mastodon.grapher.opengl;
 
 import mpicbg.spim.data.SpimDataException;
+
+import org.mastodon.grapher.opengl.mamut.MamutViewGrapherOpenGL;
 import org.mastodon.mamut.MainWindow;
 import org.mastodon.mamut.ProjectModel;
 import org.mastodon.mamut.io.ProjectLoader;
@@ -21,7 +23,7 @@ public class TestGrapherGlVsGrapher
 		mainWindow.setVisible( true );
 		mainWindow.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
 
-		final MamutViewOpenGL grapherOpenGL = new MamutViewOpenGL( projectModel );
+		final MamutViewGrapherOpenGL grapherOpenGL = new MamutViewGrapherOpenGL( projectModel );
 		grapherOpenGL.getFrame().setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
 
 		final MamutViewGrapher grapher = new MamutViewGrapher( projectModel );
