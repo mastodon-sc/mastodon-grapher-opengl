@@ -230,6 +230,7 @@ public class PointCloudPanel extends JPanel implements Paintable, ContextListene
 		final DataLayout dataLayout = layout.layout();
 		dataPointsOverlay.draw( dataLayout );
 		dataEdgesOverlay.draw( dataLayout );
+		painterThread.requestRepaint();
 	}
 
 	public void updateColor()
