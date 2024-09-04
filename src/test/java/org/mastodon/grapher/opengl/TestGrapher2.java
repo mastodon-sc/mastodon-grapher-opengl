@@ -17,6 +17,7 @@ public class TestGrapher2
 
 	public static void main( final String[] args ) throws IOException, SpimDataException
 	{
+		System.setProperty( "apple.laf.useScreenMenuBar", "true" );
 		final Context context = new Context();
 //		final String projectPath = "/Users/tinevez/Google Drive/Mastodon/Datasets/Remote/FromVlado/mette_e1.mastodon";
 		final String projectPath = "../mastodon/samples/drosophila_crop.mastodon";
