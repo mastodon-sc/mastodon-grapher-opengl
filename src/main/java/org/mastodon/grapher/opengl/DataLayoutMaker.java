@@ -563,6 +563,11 @@ public class DataLayoutMaker implements ContextListener< Spot >
 		return ylabel;
 	}
 
+	public DataDisplayStyle getStyle()
+	{
+		return style;
+	}
+
 	private RefSet< Spot > fromContext()
 	{
 		final Iterable< Spot > iterable;
