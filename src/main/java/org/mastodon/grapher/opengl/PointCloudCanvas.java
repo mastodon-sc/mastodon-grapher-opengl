@@ -20,7 +20,6 @@ import static org.lwjgl.opengl.GL11.glOrtho;
 import static org.lwjgl.opengl.GL11.glViewport;
 import static org.lwjgl.opengl.GL11C.GL_DEPTH_BUFFER_BIT;
 
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ComponentAdapter;
@@ -37,6 +36,7 @@ import java.awt.event.MouseWheelListener;
 import org.lwjgl.opengl.awt.AWTGLCanvas;
 import org.mastodon.grapher.opengl.overlays.GLOverlayRenderer;
 import org.mastodon.views.grapher.datagraph.ScreenTransform;
+import org.mastodon.views.grapher.display.style.DataDisplayStyle;
 import org.scijava.listeners.Listeners;
 
 import bdv.TransformEventHandler;
@@ -45,9 +45,6 @@ public class PointCloudCanvas extends AWTGLCanvas
 {
 
 	private static final long serialVersionUID = 1L;
-
-	// TODO move into a style.
-	public static final Color BACKGROUND_COLOR = new Color( 204, 204, 204 );
 
 	private int frameBufferWidth;
 
@@ -84,7 +81,9 @@ public class PointCloudCanvas extends AWTGLCanvas
 	 */
 	final ScreenTransform transform;
 
-	public PointCloudCanvas()
+	final DataDisplayStyle style;
+
+	public PointCloudCanvas(final DataDisplayStyle style )
 	{
 		super();
 		overlayRenderers = new Listeners.SynchronizedList<>( r -> r.setCanvasSize( getWidth(), getHeight() ) );
@@ -99,6 +98,7 @@ public class PointCloudCanvas extends AWTGLCanvas
 				requestFocusInWindow();
 			}
 		} );
+		this.style = style;
 	}
 
 	/**
@@ -202,7 +202,7 @@ public class PointCloudCanvas extends AWTGLCanvas
 	{
 		createCapabilities();
 		final float[] gbColArr = new float[ 4 ];
-		BACKGROUND_COLOR.getComponents( gbColArr );
+		style.getBackgroundColor().getComponents( gbColArr );
 		glClearColor( gbColArr[ 0 ], gbColArr[ 1 ], gbColArr[ 2 ], gbColArr[ 3 ] );
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 

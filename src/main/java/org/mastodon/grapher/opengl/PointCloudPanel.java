@@ -28,6 +28,7 @@ import org.mastodon.views.context.ContextListener;
 import org.mastodon.views.grapher.datagraph.ScreenTransform;
 import org.mastodon.views.grapher.display.FeatureGraphConfig;
 import org.mastodon.views.grapher.display.ScreenTransformState;
+import org.mastodon.views.grapher.display.style.DataDisplayStyle;
 
 import bdv.viewer.TransformListener;
 import bdv.viewer.render.PainterThread;
@@ -92,7 +93,7 @@ public class PointCloudPanel extends JPanel implements Paintable, ContextListene
 		setPreferredSize( new Dimension( w, h ) );
 
 		// Core canvas and painter thread.
-		this.canvas = new PointCloudCanvas();
+		this.canvas = new PointCloudCanvas( layout.getStyle() );
 		this.painterThread = new PainterThread( this );
 
 		// Screen transform.
@@ -290,7 +291,7 @@ public class PointCloudPanel extends JPanel implements Paintable, ContextListene
 		@Override
 		protected void paintComponent( final Graphics g )
 		{
-			final Color bgColor = PointCloudCanvas.BACKGROUND_COLOR;
+			final Color bgColor = layout.getStyle().getBackgroundColor();
 			final Color fgColor = Color.BLACK;
 			final Font tickFont = getFont().deriveFont( getFont().getSize2D() - 2f );
 			final Font labelFont = getFont(); // .deriveFont( Font.BOLD );
@@ -381,7 +382,7 @@ public class PointCloudPanel extends JPanel implements Paintable, ContextListene
 		@Override
 		protected void paintComponent( final Graphics g )
 		{
-			final Color bgColor = PointCloudCanvas.BACKGROUND_COLOR;
+			final Color bgColor = layout.getStyle().getBackgroundColor();
 			final Color fgColor = Color.BLACK;
 			final Font tickFont = getFont().deriveFont( getFont().getSize2D() - 2f );
 			final Font labelFont = getFont(); // .deriveFont( Font.BOLD );
