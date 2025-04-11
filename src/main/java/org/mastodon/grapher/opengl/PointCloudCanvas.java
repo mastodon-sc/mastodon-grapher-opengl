@@ -22,6 +22,7 @@ import static org.lwjgl.opengl.GL11C.GL_DEPTH_BUFFER_BIT;
 
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Graphics;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
@@ -32,7 +33,10 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelListener;
+import java.awt.image.BufferedImage;
+import java.nio.ByteBuffer;
 
+import org.lwjgl.opengl.GL33;
 import org.lwjgl.opengl.awt.AWTGLCanvas;
 import org.mastodon.grapher.opengl.overlays.GLOverlayRenderer;
 import org.mastodon.views.grapher.datagraph.ScreenTransform;
@@ -179,6 +183,34 @@ public class PointCloudCanvas extends AWTGLCanvas
 		}
 		handler.setCanvasSize( w, h, false );
 		addHandler( handler );
+	}
+
+	public void paint(Graphics g, int offsetX)
+	{
+		platformCanvas.makeCurrent( context );
+		paintGL();  // Render the scene before capturing
+		BufferedImage image = captureCanvas();
+		g.drawImage( image, offsetX, 0, null );
+	}
+
+	private BufferedImage captureCanvas() {
+		int width = getWidth();
+		int height = getHeight();
+		ByteBuffer buffer = ByteBuffer.allocateDirect(width * height * 4);
+		GL33.glReadPixels(0, 0, width, height, GL33.GL_RGBA, GL33.GL_UNSIGNED_BYTE, buffer);
+
+		BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+		for (int y = 0; y < height; y++) {
+			for (int x = 0; x < width; x++) {
+				int i = (x + (height - y - 1) * width) * 4;
+				int r = buffer.get(i) & 0xFF;
+				int g = buffer.get(i + 1) & 0xFF;
+				int b = buffer.get(i + 2) & 0xFF;
+				int a = buffer.get(i + 3) & 0xFF;
+				image.setRGB(x, y, (a << 24) | (r << 16) | (g << 8) | b);
+			}
+		}
+		return image;
 	}
 
 

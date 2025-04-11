@@ -1,5 +1,7 @@
 package org.mastodon.grapher.opengl;
 
+import static org.mastodon.app.MastodonIcons.FEATURES_ICON;
+
 import java.awt.BorderLayout;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -14,28 +16,34 @@ import org.mastodon.app.ui.GroupLocksPanel;
 import org.mastodon.app.ui.ViewFrame;
 import org.mastodon.feature.FeatureModel;
 import org.mastodon.feature.FeatureModel.FeatureModelListener;
+import org.mastodon.graph.GraphChangeListener;
 import org.mastodon.grouping.GroupHandle;
 import org.mastodon.mamut.model.Link;
 import org.mastodon.mamut.model.ModelGraph;
 import org.mastodon.mamut.model.Spot;
+import org.mastodon.model.FocusListener;
 import org.mastodon.model.FocusModel;
 import org.mastodon.model.HighlightModel;
 import org.mastodon.model.NavigationHandler;
 import org.mastodon.model.SelectionModel;
 import org.mastodon.undo.UndoPointMarker;
 import org.mastodon.util.FeatureUtils;
+import org.mastodon.views.context.Context;
 import org.mastodon.views.context.ContextChooser;
+import org.mastodon.views.context.ContextListener;
+import org.mastodon.views.grapher.datagraph.ScreenTransform;
 import org.mastodon.views.grapher.display.DataDisplayOptions;
 import org.mastodon.views.grapher.display.GrapherSidePanel;
+import org.mastodon.views.grapher.display.Plotable;
 import org.scijava.ui.behaviour.MouseAndKeyHandler;
 
-public class PointCloudFrame extends ViewFrame
+public class PointCloudFrame extends ViewFrame implements ContextListener<Spot>, Plotable, GraphChangeListener, FocusListener
 {
 	private static final long serialVersionUID = 1L;
 
 	private final PointCloudPanel dataDisplayPanel;
 
-	private final GrapherSidePanel sidePanel;
+	private final GrapherSidePanel<Spot, Link> sidePanel;
 
 	public PointCloudFrame(
 			final ModelGraph graph,
@@ -56,20 +64,27 @@ public class PointCloudFrame extends ViewFrame
 		 */
 
 		final DataLayoutMaker layout = new DataLayoutMaker( graph, highlight, selection, featureModel, optional );
-		dataDisplayPanel = new PointCloudPanel( layout );
+		dataDisplayPanel = new PointCloudPanel( layout, highlight, graph );
+		graph.addGraphChangeListener( this );
+		focus.listeners().add( this );
+		navigation.listeners().add( dataDisplayPanel );
 
 		// Update color when the selection or style changes.
 		optional.values.getStyle().updateListeners().add( () -> dataDisplayPanel.updateColor() );
 		selection.listeners().add( () -> dataDisplayPanel.updateColor() );
+		selection.listeners().add( () -> dataDisplayPanel.updateHighlight() );
 		highlight.listeners().add( () -> dataDisplayPanel.updateHighlight() );
 
 		/*
 		 * Side panel.
 		 */
 
-		final ContextChooser< Spot > contextChooser = new ContextChooser<>( dataDisplayPanel );
-		sidePanel = new GrapherSidePanel( nSources, contextChooser );
-		sidePanel.getBtnPlot().addActionListener( e -> dataDisplayPanel.plot( sidePanel.getGraphConfig() ) );
+		final ContextChooser< Spot > contextChooser = new ContextChooser<>( this );
+		sidePanel = new GrapherSidePanel<>( nSources, contextChooser );
+		sidePanel.getBtnPlot().addActionListener( e -> {
+			dataDisplayPanel.plot( sidePanel.getGraphConfig() );
+			dataDisplayPanel.getTransformEventHandler().zoomOutFully();
+		} );
 
 		final FeatureModelListener featureModelListener = () -> sidePanel.setFeatures(
 				FeatureUtils.collectFeatureMap( featureModel, Spot.class ),
@@ -85,7 +100,8 @@ public class PointCloudFrame extends ViewFrame
 		mainPanel.setOneTouchExpandable( true );
 		mainPanel.setContinuousLayout( true );
 		mainPanel.setBorder( null );
-		mainPanel.setDividerLocation( 300 );
+		mainPanel.setDividerLocation( 250 );
+		mainPanel.setResizeWeight( 0.9 );
 
 		add( mainPanel, BorderLayout.CENTER );
 
@@ -118,6 +134,7 @@ public class PointCloudFrame extends ViewFrame
 		mouseAndKeyHandler.setBehaviourMap( triggerbindings.getConcatenatedBehaviourMap() );
 		mouseAndKeyHandler.setKeypressManager( optional.values.getKeyPressedManager(), dataDisplayPanel.getCanvas() );
 		dataDisplayPanel.getCanvas().addHandler( mouseAndKeyHandler );
+		setIconImages( FEATURES_ICON );
 
 		pack();
 		final int x = optional.values.getX();
@@ -128,7 +145,7 @@ public class PointCloudFrame extends ViewFrame
 			setLocation( x, y );
 	}
 
-	public GrapherSidePanel getVertexSidePanel()
+	public GrapherSidePanel<Spot, Link> getVertexSidePanel()
 	{
 		return sidePanel;
 	}
@@ -136,5 +153,47 @@ public class PointCloudFrame extends ViewFrame
 	public PointCloudPanel getDataDisplayPanel()
 	{
 		return dataDisplayPanel;
+	}
+
+	@Override
+	public void plot(final ScreenTransform screenTransform )
+	{
+		dataDisplayPanel.plot( sidePanel.getGraphConfig() );
+		if (screenTransform == null)
+			dataDisplayPanel.getTransformEventHandler().zoomOutFully();
+		else
+		{
+			dataDisplayPanel.getScreenTransform().set( screenTransform );
+			dataDisplayPanel.transformChanged( screenTransform );
+		}
+	}
+
+	@Override
+	public void plot( boolean keepCurrentScreenTransform )
+	{
+		if ( keepCurrentScreenTransform )
+			plot( dataDisplayPanel.getScreenTransform().get() );
+		else
+			plot( null );
+	}
+
+	@Override
+	public void contextChanged( final Context< Spot > context )
+	{
+		dataDisplayPanel.getDataLayout().contextChanged( context );
+		sidePanel.getGraphConfig();
+		dataDisplayPanel.plot( sidePanel.getGraphConfig() );
+	}
+
+	@Override
+	public void graphChanged()
+	{
+		dataDisplayPanel.plot( sidePanel.getGraphConfig() );
+	}
+
+	@Override
+	public void focusChanged()
+	{
+		dataDisplayPanel.plot( sidePanel.getGraphConfig() );
 	}
 }

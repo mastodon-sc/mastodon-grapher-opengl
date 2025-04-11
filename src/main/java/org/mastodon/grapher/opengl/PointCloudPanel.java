@@ -19,22 +19,25 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
 import org.mastodon.grapher.opengl.DataLayoutMaker.DataLayout;
+import org.mastodon.grapher.opengl.handler.MouseHighlightHandler;
 import org.mastodon.grapher.opengl.overlays.DataEdgesOverlay;
 import org.mastodon.grapher.opengl.overlays.DataPointsOverlay;
 import org.mastodon.grapher.opengl.overlays.HighlightOverlay;
+import org.mastodon.mamut.model.Link;
+import org.mastodon.mamut.model.ModelGraph;
 import org.mastodon.mamut.model.Spot;
-import org.mastodon.views.context.Context;
-import org.mastodon.views.context.ContextListener;
+import org.mastodon.model.HighlightModel;
+import org.mastodon.model.NavigationListener;
 import org.mastodon.views.grapher.datagraph.ScreenTransform;
 import org.mastodon.views.grapher.display.FeatureGraphConfig;
+import org.mastodon.views.grapher.display.InertialScreenTransformEventHandler;
 import org.mastodon.views.grapher.display.ScreenTransformState;
-import org.mastodon.views.grapher.display.style.DataDisplayStyle;
 
 import bdv.viewer.TransformListener;
 import bdv.viewer.render.PainterThread;
 import bdv.viewer.render.PainterThread.Paintable;
 
-public class PointCloudPanel extends JPanel implements Paintable, ContextListener< Spot >, TransformListener< ScreenTransform >, LayoutChangeListener
+public class PointCloudPanel extends JPanel implements Paintable, TransformListener< ScreenTransform >, LayoutChangeListener, NavigationListener<Spot, Link>
 {
 
 	private static final long serialVersionUID = 1L;
@@ -84,10 +87,21 @@ public class PointCloudPanel extends JPanel implements Paintable, ContextListene
 
 	private final HighlightOverlay highlightOverlay;
 
-	public PointCloudPanel( final DataLayoutMaker layout )
+	private final MinimalNavigationBehaviour navigationBehaviour;
+
+	private final JPanel mainPanel;
+
+	private final JPanel xAxis;
+
+	private final JPanel yAxis;
+
+	private final ModelGraph graph;
+
+	public PointCloudPanel( final DataLayoutMaker layout, final HighlightModel<Spot, Link > highlightModel, final ModelGraph graph )
 	{
 		super( new BorderLayout(), false );
 		this.layout = layout;
+		this.graph = graph;
 		final int w = 400;
 		final int h = 400;
 		setPreferredSize( new Dimension( w, h ) );
@@ -102,6 +116,10 @@ public class PointCloudPanel extends JPanel implements Paintable, ContextListene
 		canvas.setTransformEventHandler( transformHandler );
 		screenTransform.listeners().add( this );
 
+		// Navigation behaviour.
+		navigationBehaviour = new MinimalNavigationBehaviour( transformHandler, 100, 100 );
+		navigationBehaviour.navigateToVertex( null,null );
+
 		// Overlays for the canvas.
 		this.dataEdgesOverlay = new DataEdgesOverlay( layout );
 		this.dataPointsOverlay = new DataPointsOverlay( layout, transformHandler );
@@ -111,12 +129,18 @@ public class PointCloudPanel extends JPanel implements Paintable, ContextListene
 		canvas.overlays().add( dataPointsOverlay );
 		canvas.overlays().add( highlightOverlay );
 
+		// Highlight handling.
+		final MouseHighlightHandler highlightHandler = new MouseHighlightHandler( layout, highlightModel, screenTransform.get() );
+		canvas.addMouseMotionListener( highlightHandler );
+		canvas.addMouseListener( highlightHandler );
+		screenTransform.listeners().add( highlightHandler );
+
 		// Bottom axis.
-		final JPanel xAxis = new MyXAxisPanel( canvas.transform );
-		final JPanel yAxis = new MyYAxisPanel( canvas.transform );
+		xAxis = new MyXAxisPanel( canvas.transform );
+		yAxis = new MyYAxisPanel( canvas.transform );
 
 		// Add main canvas.
-		final JPanel mainPanel = new JPanel();
+		mainPanel = new JPanel();
 		mainPanel.setLayout( new BorderLayout() );
 		mainPanel.add( canvas, BorderLayout.CENTER );
 		mainPanel.add( xAxis, BorderLayout.SOUTH );
@@ -171,7 +195,16 @@ public class PointCloudPanel extends JPanel implements Paintable, ContextListene
 	public void paint()
 	{
 		repaint();
-		SwingUtilities.invokeLater( canvas::render );
+		SwingUtilities.invokeLater( () -> {
+			try
+			{
+				canvas.render();
+			}
+			catch ( RuntimeException e )
+			{
+				// ignore
+			}
+		} );
 
 		// adjust scrollbars sizes
 		xScrollScale = 10000.0 / ( layoutMaxX - layoutMinX + 2 );
@@ -191,6 +224,14 @@ public class PointCloudPanel extends JPanel implements Paintable, ContextListene
 		ignoreScrollBarChanges = false;
 	}
 
+	@Override
+	public void paint(Graphics g)
+	{
+		super.paint( g );
+		if (g.getClipBounds() == null)
+			canvas.paint( g, yAxis.getWidth() );
+	}
+
 	public PointCloudCanvas getCanvas()
 	{
 		return canvas;
@@ -203,11 +244,6 @@ public class PointCloudPanel extends JPanel implements Paintable, ContextListene
 		painterThread.requestRepaint();
 	}
 
-	@Override
-	public void contextChanged( final Context< Spot > context )
-	{
-		System.out.println( "Context changed!" ); // DEBUG
-	}
 
 	public InertialScreenTransformEventHandlerOpenGL getTransformEventHandler()
 	{
@@ -228,6 +264,11 @@ public class PointCloudPanel extends JPanel implements Paintable, ContextListene
 	public void plot( final FeatureGraphConfig gc )
 	{
 		layout.setConfig( gc );
+		plot();
+	}
+
+	private void plot()
+	{
 		final DataLayout dataLayout = layout.layout();
 		dataPointsOverlay.draw( dataLayout );
 		dataEdgesOverlay.draw( dataLayout );
@@ -274,6 +315,124 @@ public class PointCloudPanel extends JPanel implements Paintable, ContextListene
 
 	// Width of the ticks. TODO put all in a style object.
 	private final int tickWidth = 5;
+
+	@Override
+	public void navigateToVertex( final Spot vertex )
+	{
+		navigationBehaviour.navigateToVertex( vertex, screenTransform.get() );
+	}
+
+	@Override
+	public void navigateToEdge( final Link edge )
+	{
+		final Spot source = edge.getSource( graph.vertexRef() );
+		final Spot target = edge.getTarget( graph.vertexRef() );
+		navigationBehaviour.navigateToEdge( edge, source, target, screenTransform.get() );
+		graph.releaseRef( source );
+		graph.releaseRef( target );
+	}
+
+	private class MinimalNavigationBehaviour
+	{
+		private final InertialScreenTransformEventHandler transformEventHandler;
+
+		private final int screenBorderX;
+
+		private final int screenBorderY;
+
+		public MinimalNavigationBehaviour( final InertialScreenTransformEventHandler transformEventHandler,
+				final int screenBorderX, final int screenBorderY )
+		{
+			this.transformEventHandler = transformEventHandler;
+			this.screenBorderX = screenBorderX;
+			this.screenBorderY = screenBorderY;
+		}
+
+		public void navigateToVertex( final Spot v, final ScreenTransform currentTransform )
+		{
+			if ( v == null )
+				return;
+			if (currentTransform == null)
+				return;
+
+			final double lx = layout.getXFeatureValue( v );
+			final double ly = layout.getYFeatureValue( v );
+
+			final double minX = currentTransform.getMinX();
+			final double maxX = currentTransform.getMaxX();
+			final double minY = currentTransform.getMinY();
+			final double maxY = currentTransform.getMaxY();
+			final double bx = screenBorderX / currentTransform.getScaleX();
+			final double by = screenBorderY / currentTransform.getScaleY();
+
+			double sx = 0;
+			if ( lx > maxX - bx )
+				sx = lx - maxX + bx;
+			else if ( lx < minX + bx )
+				sx = lx - minX - bx;
+			double sy = 0;
+			if ( ly > maxY - by )
+				sy = ly - maxY + by;
+			else if ( ly < minY + by )
+				sy = ly - minY - by;
+
+			if ( sx != 0 || sy != 0 )
+			{
+				final double cx = ( minX + maxX ) / 2 + sx;
+				final double cy = ( minY + maxY ) / 2 + sy;
+				transformEventHandler.centerOn( cx, cy );
+			}
+		}
+
+		public void navigateToEdge( final Link e, final Spot source, final Spot target,
+				final ScreenTransform currentTransform )
+		{
+			if ( e == null )
+				return;
+			if (currentTransform == null)
+				return;
+
+			final double minX = currentTransform.getMinX();
+			final double maxX = currentTransform.getMaxX();
+			final double minY = currentTransform.getMinY();
+			final double maxY = currentTransform.getMaxY();
+			final double bx = screenBorderX / currentTransform.getScaleX();
+			final double by = screenBorderY / currentTransform.getScaleY();
+
+			final double sourceX = layout.getXFeatureValue( source );
+			final double targetX = layout.getXFeatureValue( target );
+
+			final double eMinX = Math.min( sourceX, targetX );
+			final double eMaxX = Math.max( sourceX, targetX );
+			final double eMinY = layout.getYFeatureValue( source );
+			final double eMaxY = layout.getYFeatureValue( target );
+			final double lx = 0.5 * ( eMinX + eMaxX );
+			final double ly = 0.5 * ( eMinY + eMaxY );
+
+			double sx = 0;
+			if ( ( eMaxX - eMinX ) > ( maxX - minX - 2 * bx ) )
+				sx = lx - ( minX + maxX ) / 2;
+			else if ( eMaxX > maxX - bx )
+				sx = eMaxX - maxX + bx;
+			else if ( eMinX < minX + bx )
+				sx = eMinX - minX - bx;
+
+			double sy = 0;
+			if ( ( eMaxY - eMinY ) > ( maxY - minY - 2 * by ) )
+				sy = ly - ( minY + maxY ) / 2;
+			else if ( eMaxY > maxY - by )
+				sy = eMaxY - maxY + by;
+			else if ( eMinY < minY + by )
+				sy = eMinY - minY - by;
+
+			if ( sx != 0 || sy != 0 )
+			{
+				final double cx = ( minX + maxX ) / 2 + sx;
+				final double cy = ( minY + maxY ) / 2 + sy;
+				transformEventHandler.centerOn( cx, cy );
+			}
+		}
+	}
 
 	private class MyYAxisPanel extends JPanel
 	{
@@ -348,12 +507,16 @@ public class PointCloudPanel extends JPanel implements Paintable, ContextListene
 
 			// 3. Y label
 			g2.setFont( labelFont );
-			final int yLabelWidth = fm.stringWidth( layout.getYLabel() );
-			drawStringRotated( g2,
-					width - tickWidth - 2 - maxStringWidth - 5,
-					height / 2 + yLabelWidth / 2,
-					-90.,
-					layout.getYLabel() );
+			String yLabel = layout.getYLabel();
+			if (yLabel != null)
+			{
+				final int yLabelWidth = fm.stringWidth( layout.getYLabel() );
+				drawStringRotated( g2,
+						width - tickWidth - 2 - maxStringWidth - 5,
+						height / 2 + yLabelWidth / 2,
+						-90.,
+						layout.getYLabel() );
+			}
 		}
 	}
 
@@ -445,10 +608,14 @@ public class PointCloudPanel extends JPanel implements Paintable, ContextListene
 
 			// 3. X label
 			g2.setFont( labelFont );
-			final int xLabelWidth = fm.stringWidth( layout.getXLabel() );
-			g2.drawString( layout.getXLabel(),
-					axesWidth + ( width - axesWidth ) / 2 - xLabelWidth / 2,
-					ytop + tickWidth + 2 + 2 * fontAscent + 5 );
+			String xLabel = layout.getXLabel();
+			if (xLabel != null)
+			{
+				final int xLabelWidth = fm.stringWidth( xLabel );
+				g2.drawString( layout.getXLabel(),
+						axesWidth + ( width - axesWidth ) / 2 - xLabelWidth / 2,
+						ytop + tickWidth + 2 + 2 * fontAscent + 5 );
+			}
 
 			// 4. Erase bottom left corner.
 			g.setColor( bgColor );

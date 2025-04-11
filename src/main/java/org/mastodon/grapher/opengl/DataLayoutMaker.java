@@ -1,6 +1,7 @@
 package org.mastodon.grapher.opengl;
 
 import static org.mastodon.grapher.opengl.overlays.DataPointsOverlay.COLOR_NUM_CHANNELS;
+import static org.mastodon.grapher.opengl.overlays.DataPointsOverlay.DEFAULT_POINT_SIZE;
 import static org.mastodon.grapher.opengl.overlays.DataPointsOverlay.VERTEX_NUM_DIMENSIONS;
 
 import java.awt.Color;
@@ -17,14 +18,18 @@ import org.mastodon.graph.algorithm.traversal.DepthFirstSearch;
 import org.mastodon.graph.algorithm.traversal.GraphSearch.SearchDirection;
 import org.mastodon.graph.algorithm.traversal.SearchListener;
 import org.mastodon.grapher.opengl.util.KdTreeWrapper;
+import org.mastodon.grapher.opengl.util.LineRectangleIntersection;
+import org.mastodon.grapher.opengl.util.ScreenTransformUtils;
 import org.mastodon.mamut.model.Link;
 import org.mastodon.mamut.model.ModelGraph;
 import org.mastodon.mamut.model.Spot;
 import org.mastodon.model.HighlightModel;
 import org.mastodon.model.SelectionModel;
 import org.mastodon.ui.coloring.GraphColorGenerator;
+import org.mastodon.util.GeometryUtil;
 import org.mastodon.views.context.Context;
 import org.mastodon.views.context.ContextListener;
+import org.mastodon.views.grapher.datagraph.ScreenTransform;
 import org.mastodon.views.grapher.display.DataDisplayOptions;
 import org.mastodon.views.grapher.display.FeatureGraphConfig;
 import org.mastodon.views.grapher.display.FeatureSpecPair;
@@ -124,6 +129,15 @@ public class DataLayoutMaker implements ContextListener< Spot >
 	private void setPaintEdges( final boolean paintEdges )
 	{
 		this.paintEdges = paintEdges;
+	}
+
+	/**
+	 * Returns whether the screen edges will be generated.
+	 * @return <code>true</code> if the screen edges will be generated.
+	 */
+	public boolean isPaintEdges()
+	{
+		return paintEdges;
 	}
 
 	/**
@@ -229,6 +243,43 @@ public class DataLayoutMaker implements ContextListener< Spot >
 		finally
 		{
 			graph.releaseRef( vref );
+		}
+	}
+
+	public float[][] getHighlightEdgeData()
+	{
+		final Spot vertexRef = graph.vertexRef();
+		final Link edgeRef = graph.edgeRef();
+		try
+		{
+			final Link highlightedEdge = highlight.getHighlightedEdge( edgeRef );
+			if ( highlightedEdge == null )
+				return null;
+
+			final float[] edgeColor = new float[ 4 ];
+			colorEdge( highlightedEdge, edgeColor, vertexRef );
+
+			float x1 = (float) getXFeatureValue( highlightedEdge.getSource(vertexRef) );
+			float y1 = (float) getYFeatureValue( highlightedEdge.getSource(vertexRef) );
+			float x2 = (float) getXFeatureValue( highlightedEdge.getTarget(vertexRef) );
+			float y2 = (float) getYFeatureValue( highlightedEdge.getTarget(vertexRef) );
+
+			final Color bg = style.getBackgroundColor();
+			return new float[][] {
+					new float[] { x1, y1 },
+					new float[] { x2, y2 },
+					edgeColor,
+					new float[] {
+							bg.getRed() / 255f,
+							bg.getGreen() / 255f,
+							bg.getBlue() / 255f,
+							bg.getAlpha() / 255f }
+			};
+		}
+		finally
+		{
+			graph.releaseRef( vertexRef );
+			graph.releaseRef( edgeRef );
 		}
 	}
 
@@ -392,6 +443,56 @@ public class DataLayoutMaker implements ContextListener< Spot >
 		out[ 3 ] = ( a / 255f );
 	}
 
+	private void colorEdge( final Link link, final float[] out, final Spot vertexRef )
+	{
+		final Color edgeColor = style.getEdgeColor();
+		final int edgeColorRed = edgeColor.getRed();
+		final int edgeColorGreen = edgeColor.getGreen();
+		final int edgeColorBlue = edgeColor.getBlue();
+		final int edgeColorAlpha = edgeColor.getAlpha();
+
+		final Color selectedEdgeColor = style.getSelectedEdgeColor();
+		final int selectedEdgeColorRed = selectedEdgeColor.getRed();
+		final int selectedEdgeColorGreen = selectedEdgeColor.getGreen();
+		final int selectedEdgeColorBlue = selectedEdgeColor.getBlue();
+		final int selectedEdgeColorAlpha = selectedEdgeColor.getAlpha();
+
+		final int a;
+		final int r;
+		final int g;
+		final int b;
+		if ( selection.isSelected( link ) )
+		{
+			r = selectedEdgeColorRed;
+			g = selectedEdgeColorGreen;
+			b = selectedEdgeColorBlue;
+			a = selectedEdgeColorAlpha;
+		}
+		else
+		{
+			final int c = graphColorGenerator.color( link, link.getSource( vertexRef ), link.getTarget( vertexRef ) );
+			if ( c == 0 )
+			{
+				a = edgeColorAlpha;
+				r = edgeColorRed;
+				g = edgeColorGreen;
+				b = edgeColorBlue;
+			}
+			else
+			{
+				// Color from the colormap.
+				a = ( c >> 24 ) & 0xFF;
+				r = ( c >> 16 ) & 0xFF;
+				g = ( c >> 8 ) & 0xFF;
+				b = c & 255;
+			}
+		}
+		out[ 0 ] = ( r / 255f );
+		out[ 1 ] = ( g / 255f );
+		out[ 2 ] = ( b / 255f );
+		out[ 3 ] = ( a / 255f );
+	}
+
 	private void setVertices( final RefSet< Spot > vertices )
 	{
 		this.vertices = vertices;
@@ -412,12 +513,12 @@ public class DataLayoutMaker implements ContextListener< Spot >
 		vertices.releaseRef( tref );
 	}
 
-	private final double getXFeatureValue( final Spot v )
+	public double getXFeatureValue( final Spot v )
 	{
 		return getFeatureValue( v, xpVertex, xpEdge );
 	}
 
-	private final double getYFeatureValue( final Spot v )
+	public double getYFeatureValue( final Spot v )
 	{
 		return getFeatureValue( v, ypVertex, ypEdge );
 	}
@@ -441,16 +542,16 @@ public class DataLayoutMaker implements ContextListener< Spot >
 
 	/**
 	 * Returns the set of data vertices that are painted according to this
-	 * layout instance, within the specified <b>screen coordinates</b>.
+	 * layout instance, within the specified <b>layout coordinates</b>.
 	 *
 	 * @param x1
-	 *            x min in screen coordinates.
+	 *            x min in layout coordinates.
 	 * @param y1
-	 *            y min in screen coordinates.
+	 *            y min in layout coordinates.
 	 * @param x2
-	 *            x max in screen coordinates.
+	 *            x max in layout coordinates.
 	 * @param y2
-	 *            y max in screen coordinates.
+	 *            y max in layout coordinates.
 	 * @return a new {@link RefSet}.
 	 */
 	public RefSet< Spot > getSpotWithin( final double x1, final double y1, final double x2, final double y2 )
@@ -474,6 +575,37 @@ public class DataLayoutMaker implements ContextListener< Spot >
 		final ConvexPolytope polytope = new ConvexPolytope( hpMinX, hpMinY, hpMaxX, hpMaxY );
 
 		return kdtree.getObjsWithin( polytope );
+	}
+
+	/**
+	 * Returns the set of data edges that are painted according to this
+	 * layout instance, within the specified <b>layout coordinates</b>.
+	 *
+	 * @param x1
+	 *            x min in layout coordinates.
+	 * @param y1
+	 *            y min in layout coordinates.
+	 * @param x2
+	 *            x max in layout coordinates.
+	 * @param y2
+	 *            y max in layout coordinates.
+	 * @return a new {@link RefSet}.
+	 */
+	public RefSet< Link > getLinksWithin( final float x1, final float y1, final float x2, final float y2 )
+	{
+		final RefSet< Link > set = RefCollections.createRefSet( graph.edges() );
+		final Spot vertexRef = graph.vertexRef();
+		for ( final Link e : edges )
+		{
+			final float x1Edge = (float) getXFeatureValue( e.getSource( vertexRef ) );
+			final float y1Edge = (float) getYFeatureValue( e.getSource( vertexRef ) );
+			final float x2Edge = (float) getXFeatureValue( e.getTarget( vertexRef ) );
+			final float y2Edge = (float) getYFeatureValue( e.getTarget( vertexRef ) );
+			if (LineRectangleIntersection.doesLineIntersectRectangle( x1Edge, y1Edge, x2Edge, y2Edge, x1, y1, x2, y2 ))
+				set.add( e );
+		}
+		graph.releaseRef( vertexRef );
+		return set;
 	}
 
 	public void setConfig( final FeatureGraphConfig gc )
@@ -638,6 +770,85 @@ public class DataLayoutMaker implements ContextListener< Spot >
 	public void contextChanged( final Context< Spot > context )
 	{
 		this.context = context;
+	}
+
+	/**
+	 * Returns the vertex nearest to the specified coordinates. The coordinates are given in layout space.
+	 * @param x coordinate in layout space.
+	 * @param y coordinate in layout space.
+	 * @param screenTransform the screen transform.
+	 * @return the vertex nearest to the specified coordinates
+	 * 		   or <code>null</code> if no vertex is found within {@link org.mastodon.grapher.opengl.overlays.DataPointsOverlay#DEFAULT_POINT_SIZE}/2
+	 */
+	public Spot getNearestSpot(final double x, final double y, final ScreenTransform screenTransform )
+	{
+		RefSet<Spot> spotsWithinBoundingBox = null;
+		// Search for candidates in a box with decreasing size
+		for ( int i = 0; i < 10; i++ )
+		{
+			float width = DEFAULT_POINT_SIZE / (float ) Math.pow( 2, i );
+			final double[] bbox = ScreenTransformUtils.getDataPointArea( x, y, screenTransform, width );
+			RefSet<Spot> tempSpots = getSpotWithin( bbox[0], bbox[1], bbox[2], bbox[3] );
+			if ( !tempSpots.isEmpty() )
+				spotsWithinBoundingBox = tempSpots;
+			else
+				break;
+		}
+		if ( spotsWithinBoundingBox == null )
+			return null;
+		Spot nearestSpot = null;
+		double nearestDistance = Double.MAX_VALUE;
+		// Find the vertex nearest to the center from the candidates
+		for ( final Spot spot : spotsWithinBoundingBox )
+		{
+			double xValue = getXFeatureValue( spot );
+			double yValue = getYFeatureValue( spot );
+			final double dx = x - xValue;
+			final double dy = y - yValue;
+			final double distanceSquared = dx * dx + dy * dy;
+			if ( distanceSquared < nearestDistance )
+			{
+				nearestDistance = distanceSquared;
+				nearestSpot = spot;
+			}
+		}
+		return nearestSpot;
+	}
+
+	/**
+	 * Returns the link nearest to the specified coordinates. The coordinates are given in layout space.
+	 * @param x coordinate in layout space.
+	 * @param y coordinate in layout space.
+	 * @param screenTransform the screen transform.
+	 * @return the vertex link to the specified coordinates
+	 * 		   or <code>null</code> if no link is found within {@link org.mastodon.grapher.opengl.overlays.DataPointsOverlay#DEFAULT_POINT_SIZE}
+	 */
+	public Link getNearestLink(final double x, final double y, final ScreenTransform screenTransform )
+	{
+		final double[] bbox = ScreenTransformUtils.getDataPointArea( x, y, screenTransform, DEFAULT_POINT_SIZE );
+		RefSet<Link> candidates = getLinksWithin( (float) bbox[0], (float) bbox[1], (float) bbox[2], (float) bbox[3] );
+		if ( candidates.isEmpty() )
+			return null;
+		Link nearestLink = null;
+		double nearestDistance = Double.MAX_VALUE;
+		final Spot vertexRef = graph.vertexRef();
+		for ( final Link link : candidates )
+		{
+			final float xPoint = (float) screenTransform.screenToLayoutX( x );
+			final float yPoint = (float) screenTransform.screenToLayoutY( y );
+			final float x1Edge = (float) getXFeatureValue( link.getSource( vertexRef ) );
+			final float y1Edge = (float) getYFeatureValue( link.getSource( vertexRef ) );
+			final float x2Edge = (float) getXFeatureValue( link.getTarget( vertexRef ) );
+			final float y2Edge = (float) getYFeatureValue( link.getTarget( vertexRef ) );
+			final double distance = GeometryUtil.segmentDist( xPoint, yPoint, x1Edge, y1Edge, x2Edge, y2Edge );
+			if ( distance < nearestDistance )
+			{
+				nearestLink = link;
+				nearestDistance = distance;
+			}
+		}
+		graph.releaseRef( vertexRef );
+		return nearestLink;
 	}
 
 	public static final class DataLayout
